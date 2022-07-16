@@ -74,7 +74,7 @@ You must have the latest version of [Java](https://www.oracle.com/java/technolog
 1. Clone the repo:
 
 ```
-git clone <insert link here>
+git clone https://github.com/rittvic/BuckyTheBadgerBot.git
 ```
 
 2. Create a .env file in the root project folder and put in your token variables there, following the example in `.env.example`
