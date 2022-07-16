@@ -99,7 +99,12 @@ git clone <insert link here>
 
 ## Contributing
 
-W.I.P.
+If you would like to contribute, whether it is a suggestion or bug fix, please fork the repo and create a pull request. Any contributions would be appreciated :)
+1. Fork the project
+2. Create your feature branch - `git checkout -b feature/YourFeature`
+3. Commit your changes - `git commit -m 'Add this YourFeature'`
+4. Push to the branch - `git push origin feature/YourFeature`
+5. Open a pull request
 
 ## License
 
