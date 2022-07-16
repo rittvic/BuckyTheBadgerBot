@@ -21,7 +21,7 @@ This queries through the courses and finds the best matches.  It then generates 
 
 Example -
 
-(https://media.discordapp.net/attachments/595712186169688104/997402314094682132/unknown.png)
+![Example](https://media.discordapp.net/attachments/595712186169688104/997402314094682132/unknown.png)
 
 
 #### Course Command
@@ -41,7 +41,7 @@ This searches for the specified course (or the top result) and displays the foll
 
 Example -
 
-(https://media.discordapp.net/attachments/595712186169688104/997403075725754388/unknown.png?width=611&height=676)
+![Example](https://media.discordapp.net/attachments/595712186169688104/997403075725754388/unknown.png?width=611&height=676)
 
 #### Professor Command
 
@@ -59,7 +59,7 @@ Searches for a professor and displays the following information:
 
 Example -
 
-(https://media.discordapp.net/attachments/595712186169688104/997403433260830740/unknown.png)
+![Example](https://media.discordapp.net/attachments/595712186169688104/997403433260830740/unknown.png)
 
 ## Self Hosting
 
@@ -67,7 +67,7 @@ To get a local copy of the bot up and running for development and testing purpos
 
 ### Prerequisites
 
-You must have the latest version of [Java ](https://www.oracle.com/java/technologies/downloads/) installed (Java SDK 18)
+You must have the latest version of [Java](https://www.oracle.com/java/technologies/downloads/) installed (Java SDK 18)
 
 ### Installation
 
