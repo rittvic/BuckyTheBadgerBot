@@ -63,7 +63,7 @@ Example -
 
 ## Self Hosting
 
-To get a local copy of the bot up and running for development and testing purposes, following these instructions.
+To get a local copy of the bot up and running for development and testing purposes, follow these instructions.
 
 ### Prerequisites
 
@@ -87,8 +87,8 @@ git clone https://github.com/rittvic/BuckyTheBadgerBot.git
 
 * [Java Discord API (JDA)](https://github.com/DV8FromTheWorld/JDA) - The Java wrapper for Discord API
 * [jsoup](https://github.com/jhy/jsoup/) - HTML parser library
-* [JSON Processing](https://mvnrepository.com/artifact/org.glassfish/javax.json) - To process JSON (1/2)
-* [JSON Processing API](https://mvnrepository.com/artifact/javax.json/javax.json-api) - To process JSON (2/2)
+* [JSON Processing](https://mvnrepository.com/artifact/org.glassfish/javax.json) - To parse JSON (1/2)
+* [JSON Processing API](https://mvnrepository.com/artifact/javax.json/javax.json-api) - To parse JSON (2/2)
 * [Dotenv](https://github.com/cdimascio/dotenv-java) - Module to load environment variables
 * [Maven](https://maven.apache.org/) - Dependency Management
 
@@ -109,3 +109,5 @@ If you would like to contribute, whether it is a suggestion or bug fix, please f
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for  details
+
+##### Note: This project is not affiliated with UW-Madison.
