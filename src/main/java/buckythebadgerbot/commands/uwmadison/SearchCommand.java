@@ -16,6 +16,7 @@ import java.awt.*;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Command that queries courses and displays the top ten (or all if less) results.
@@ -82,14 +83,29 @@ public class SearchCommand extends Command {
                //Generate the buttons, one per result
                 ArrayList<Button> buttonsToSend = bot.buttonListener.getButtons(buttonResults, userID);
                 MessageBuilder message = new MessageBuilder(eb.build());
+
+                //If there are 5 buttons or less, create a single ActionRow
                 if (buttonsToSend.size()<=5){
                     message.setActionRows(ActionRow.of(buttonsToSend));
+                    event.getHook().sendMessage(message.build()).queue();
+
+                    //Disable the buttons after 10 minutes starting the execution of slash command
+                    event.getHook().editOriginalComponents(ActionRow.of(buttonsToSend).asDisabled()).queueAfter(10, TimeUnit.MINUTES);
                 } else{
+
+                    //If there are more than 5 buttons, create two ActionRows and split the buttons between the rows
                     message.setActionRows(
                             (ActionRow.of(buttonsToSend.subList(0, 5))),
                             ActionRow.of((buttonsToSend.subList(5, buttonsToSend.size()))));
+                    event.getHook().sendMessage(message.build()).queue();
+
+                    //Disable the buttons after 10 minutes starting the execution of slash command
+                    event.getHook().editOriginalComponents(
+                            ActionRow.of(buttonsToSend.subList(0,5)).asDisabled(),
+                           ActionRow.of(buttonsToSend.subList(5,buttonsToSend.size())).asDisabled()
+                    ).queueAfter(10, TimeUnit.MINUTES);
+
                 }
-                event.getHook().sendMessage(message.build()).queue();
             } else{
                 event.getHook().sendMessage("No results found.").queue();
             }
