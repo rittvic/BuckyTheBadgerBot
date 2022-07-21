@@ -18,6 +18,7 @@ public class Professor {
     private List<String> topFiveReviews;
     private List<String> coursesTaught;
     private boolean doesExist;
+    private boolean fallback;
 
     public Professor(boolean doesExist, String regularId, String legacyId, double wouldTakeAgainPercent, double avgRating, double avgDifficulty, int numRating, String firstName, String lastName, String department, List<String> topFiveReviews, List<String> coursesTaught){
         this.doesExist = doesExist;
@@ -37,6 +38,13 @@ public class Professor {
     public Professor(boolean doesExist){
         this.doesExist = doesExist;
 
+    }
+
+    public Professor(boolean doesExist, boolean fallback, String firstName, String lastName){
+        this.doesExist = doesExist;
+        this.fallback = fallback;
+        this.firstName =firstName;
+        this.lastName = lastName;
     }
 
     public String getRegularId() {
@@ -87,10 +95,15 @@ public class Professor {
         return doesExist;
     }
 
+    public boolean getFallback() {
+        return fallback;
+    }
+
     @Override
     public String toString() {
         return "Professor{" +
                 "It exists='" + doesExist + '\'' +
+                "Is fallback='" + fallback + '\'' +
                 "Regular ID='" + regularId + '\'' +
                 "Legacy ID='" + legacyId + '\'' +
                 "avgRating=" + avgRating +

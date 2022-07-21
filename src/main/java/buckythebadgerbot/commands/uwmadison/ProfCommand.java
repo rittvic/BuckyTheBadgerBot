@@ -43,9 +43,10 @@ public class ProfCommand extends Command {
             //Assigns the Professor instance to the results of the HTTP request
             Professor prof = bot.RMPClient.profInfo(profName);
 
-            if(prof.getDoesExist()){
+            if(prof.getDoesExist() && !prof.getFallback()){
                 StringBuilder topReviews = new StringBuilder();
                 StringBuilder coursesTaught = new StringBuilder();
+                String coursesTaughtDisplay;
 
                 //Obtain the Professor's reviews
                 if(!prof.getTopFiveReviews().isEmpty()) {
@@ -64,6 +65,14 @@ public class ProfCommand extends Command {
                 } else{
                     coursesTaught.append("None");
                 }
+
+                //Change the field title based on number of courses taught
+                if(prof.getCoursesTaught().size()==10){
+                    coursesTaughtDisplay = "Popular Courses Taught";
+                } else {
+                    coursesTaughtDisplay = "Courses Taught";
+                }
+
                 EmbedBuilder eb = new EmbedBuilder()
                         .setTitle((prof.getFirstName() + " " + prof.getLastName()), "https://www.ratemyprofessors.com/ShowRatings.jsp?tid=" + prof.getLegacyId())
                         .setColor(Color.red)
@@ -73,13 +82,17 @@ public class ProfCommand extends Command {
                         .addField("Total Ratings", String.valueOf(prof.getNumRating()), false)
                         .addField("Would Take Again", String.valueOf(prof.getTakeAgainPercentage()).replace("-1", "N/A") +"%", false)
                         .addField("Top Tags", topReviews.toString(), false)
-                        .addField("Courses Taught", coursesTaught.toString(), false);
+                        .addField(coursesTaughtDisplay, coursesTaught.toString(), false);
                 long endTime = System.nanoTime();
                 long duration = (endTime - startTime) / 1000000;
                 eb.setFooter("This took " + duration + " ms to respond.");
                 event.getHook().sendMessageEmbeds(eb.build()).queue();
+
+            } else if(prof.getDoesExist() && prof.getFallback()){
+                event.getHook().sendMessage("Professor " + "\"" + prof.getFirstName() + " " + prof.getLastName() +"\"" + " does not teach at UW-Madison!").queue();
+
             } else{
-                event.getHook().sendMessage("Professor " + "\"" + profName + "\"" + " does not exist!").queue();
+                event.getHook().sendMessage("Professor " + "\"" + profName +"\"" + " does not exist!").queue();
             }
         }, bot.service);
     }

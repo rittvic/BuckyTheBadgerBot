@@ -183,6 +183,7 @@ public class HTTPClient {
 
         //Check to see if the professor exists. If it does, then fetch the id, legacy id and wouldTakeAgainPercent
         try {
+            profInformation.add(String.valueOf(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getBoolean("didFallback")));
             profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(0).
                     getJsonObject("node").getJsonString("id").toString().replace("\"", ""));
             profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(0).
@@ -229,7 +230,7 @@ public class HTTPClient {
                         "d\\n    name\\n    id\\n  }\\n}\\n\\nfragment TeacherBookmark_teacher on Teacher {\\n  id\\n  isSaved\\n}\\n\\nfragment NumRatingsLink_teacher on Teacher {\\n  numRatings\\n  ...RateTeacherLink_teacher\\n}\\n\\nf" +
                         "ragment RatingDistributionChart_ratingsDistribution on ratingsDistribution {\\n  r1\\n  r2\\n  r3\\n  r4\\n  r5\\n}\\n\\nfragment HeaderDescription_teacher on Teacher {\\n  id\\n  firstName\\n  lastName\\n  depar" +
                         "tment\\n  school {\\n    legacyId\\n    name\\n    id\\n  }\\n  ...TeacherTitles_teacher\\n  ...TeacherBookmark_teacher\\n}\\n\\nfragment HeaderRateButton_teacher on Teacher {\\n  ...RateTeacherLink_teacher\\n}\\" +
-                        "n\\nfragment TeacherTitles_teacher on Teacher {\\n  department\\n  school {\\n    legacyId\\n    name\\n    id\\n  }\\n}\\n\",\"variables\":{\"id\":\"" + profInformation.get(0) + "\"}}"))
+                        "n\\nfragment TeacherTitles_teacher on Teacher {\\n  department\\n  school {\\n    legacyId\\n    name\\n    id\\n  }\\n}\\n\",\"variables\":{\"id\":\"" + profInformation.get(1) + "\"}}"))
                 .uri(URI.create(BASE_URL1)).build();
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -253,6 +254,7 @@ public class HTTPClient {
         for (int i = 0; i < (numReviews); i++) {
             profReviews.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonArray("teacherRatingTags").getJsonObject(i));
         }
+
         List<String> topFiveReviews;
         if (numReviews >= 5) {
             topFiveReviews = profReviews.stream()
@@ -270,12 +272,28 @@ public class HTTPClient {
         for(int i = 0; i < (numCourses); i++){
             profCourses.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonArray("courseCodes").getJsonObject(i));
         }
-        List<String> sortedProfCourses = profCourses.stream()
-                .sorted(Comparator.comparingInt((JsonObject obj) -> obj.getInt("courseCount")).reversed())
-                .map((JsonObject obj) -> obj.getString("courseName")).toList();
 
-        //Return Professor object with the all the fetched information
-        return new Professor(true,profInformation.get(0), profInformation.get(1),Double.parseDouble(profInformation.get(2)),Double.parseDouble(profInformation.get(3)),Double.parseDouble(profInformation.get(4)),
-                Integer.parseInt(profInformation.get(5)), profInformation.get(6),profInformation.get(7),profInformation.get(8), topFiveReviews, sortedProfCourses);
+        List<String> sortedProfCourses;
+        if(numCourses >= 10){
+            sortedProfCourses = profCourses.stream()
+                    .sorted(Comparator.comparingInt((JsonObject obj) -> obj.getInt("courseCount")).reversed())
+                    .map((JsonObject obj) -> obj.getString("courseName")).toList().subList(0,10);
+        } else{
+            sortedProfCourses = profCourses.stream()
+                    .sorted(Comparator.comparingInt((JsonObject obj) -> obj.getInt("courseCount")).reversed())
+                    .map((JsonObject obj) -> obj.getString("courseName")).toList();
+        }
+
+
+
+        if(profInformation.get(0).equalsIgnoreCase("true")){
+            //If the professor exists, but doesn't teach at UW-Madison, returns the Professor object saying so
+            return new Professor(true, true, profInformation.get(7), profInformation.get(8));
+
+        } else {
+            //Return Professor object with the all the fetched information
+            return new Professor(true, profInformation.get(1), profInformation.get(2), Double.parseDouble(profInformation.get(3)), Double.parseDouble(profInformation.get(4)), Double.parseDouble(profInformation.get(5)),
+                    Integer.parseInt(profInformation.get(6)), profInformation.get(7), profInformation.get(8), profInformation.get(9), topFiveReviews, sortedProfCourses);
+        }
     }
 }
