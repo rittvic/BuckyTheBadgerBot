@@ -37,7 +37,6 @@ public class ProfCommand extends Command {
         CompletableFuture.runAsync(() -> {
             logger.info("Executing {}", ProfCommand.class.getSimpleName());
             long startTime = System.nanoTime();
-            event.deferReply().queue();
             String profName = Objects.requireNonNull(event.getOption("prof")).getAsString();
 
             //Assigns the Professor instance to the results of the HTTP request
@@ -86,13 +85,13 @@ public class ProfCommand extends Command {
                 long endTime = System.nanoTime();
                 long duration = (endTime - startTime) / 1000000;
                 eb.setFooter("This took " + duration + " ms to respond.");
-                event.getHook().sendMessageEmbeds(eb.build()).queue();
+                event.replyEmbeds(eb.build()).queue();
 
             } else if(prof.getDoesExist() && prof.getFallback()){
-                event.getHook().sendMessage("Professor " + "\"" + prof.getFirstName() + " " + prof.getLastName() +"\"" + " does not teach at UW-Madison!").queue();
+                event.reply("Professor " + "\"" + prof.getFirstName() + " " + prof.getLastName() +"\"" + " does not teach at UW-Madison!" + " (Note: If this is inaccurate, try to be more specific or blame RMP)").queue();
 
             } else{
-                event.getHook().sendMessage("Professor " + "\"" + profName +"\"" + " does not exist!").queue();
+                event.reply("Professor " + "\"" + profName +"\"" + " does not exist!" + " (Note: If this is inaccurate, try to be more specific or blame RMP)").queue();
             }
         }, bot.service);
     }

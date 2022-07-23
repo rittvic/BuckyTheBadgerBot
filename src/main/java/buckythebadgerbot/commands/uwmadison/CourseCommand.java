@@ -38,7 +38,6 @@ public class CourseCommand extends Command {
         CompletableFuture.runAsync(() -> {
             logger.info("Executing {}", CourseCommand.class.getSimpleName());
             long startTime = System.nanoTime();
-            event.deferReply().queue();
             ArrayList<String> courseSearch;
             ArrayList<String> courseInformation;
             String averageGPA;
@@ -68,12 +67,12 @@ public class CourseCommand extends Command {
                     long endTime = System.nanoTime();
                     long duration = (endTime - startTime) / 1000000;
                     eb.setFooter("This took " + duration + " ms to respond.");
-                    event.getHook().sendMessageEmbeds(eb.build()).queue();
+                    event.replyEmbeds(eb.build()).queue();
                 } else{
-                    event.getHook().sendMessage("This course" + " (" +courseSearch.get(3) + " " + courseSearch.get(1) + " - " + "'"+courseSearch.get(4)+"')" + " is no longer taught!").queue();
+                    event.reply("This course" + " (" +courseSearch.get(3) + " " + courseSearch.get(1) + " - " + "'"+courseSearch.get(4)+"')" + " is no longer taught!").queue();
                 }
             } else {
-                event.getHook().sendMessage("No courses found.").queue();
+                event.reply("No courses found.").queue();
             }
         }, bot.service);
     }

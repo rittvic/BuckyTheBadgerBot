@@ -181,14 +181,26 @@ public class HTTPClient {
         JsonReader reader = Json.createReader(new StringReader(response.body()));
         JsonObject jsonObject = reader.readObject();
 
+        //Pick the first UW-Madison professor that shows up in the results. If none are there, it is set to the very first result (also by default).
+        int numProfs = jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").size();
+        int node = 0;
+        for (int i = 0; i < numProfs; i++){
+            String school = jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(i).
+                    getJsonObject("node").getJsonObject("school").getJsonString("name").toString().replace("\"", "");
+            if (school.equalsIgnoreCase("University of Wisconsin - Madison")){
+                node = i;
+            }
+        }
+
         //Check to see if the professor exists. If it does, then fetch the id, legacy id and wouldTakeAgainPercent
         try {
-            profInformation.add(String.valueOf(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getBoolean("didFallback")));
-            profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(0).
+            profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(node).
+                    getJsonObject("node").getJsonObject("school").getJsonString("name").toString().replace("\"", ""));
+            profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(node).
                     getJsonObject("node").getJsonString("id").toString().replace("\"", ""));
-            profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(0).
+            profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(node).
                     getJsonObject("node").getJsonNumber("legacyId").toString().replace("\"", ""));
-            profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(0).
+            profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(node).
                     getJsonObject("node").getJsonNumber("wouldTakeAgainPercent").toString());
         } catch (IndexOutOfBoundsException e) {
             return new Professor(false);
@@ -285,13 +297,12 @@ public class HTTPClient {
         }
 
 
-
-        if(profInformation.get(0).equalsIgnoreCase("true")){
-            //If the professor exists, but doesn't teach at UW-Madison, returns the Professor object saying so
+        //If the professor exists, but doesn't teach at UW-Madison, returns the Professor object saying so
+        if(!profInformation.get(0).equalsIgnoreCase("University of Wisconsin - Madison")){
             return new Professor(true, true, profInformation.get(7), profInformation.get(8));
 
+        //Return Professor object with the all the fetched information
         } else {
-            //Return Professor object with the all the fetched information
             return new Professor(true, profInformation.get(1), profInformation.get(2), Double.parseDouble(profInformation.get(3)), Double.parseDouble(profInformation.get(4)), Double.parseDouble(profInformation.get(5)),
                     Integer.parseInt(profInformation.get(6)), profInformation.get(7), profInformation.get(8), profInformation.get(9), topFiveReviews, sortedProfCourses);
         }
