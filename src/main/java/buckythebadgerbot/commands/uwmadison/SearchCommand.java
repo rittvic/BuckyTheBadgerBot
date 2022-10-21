@@ -3,12 +3,12 @@ package buckythebadgerbot.commands.uwmadison;
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.json.JsonObject;
@@ -80,13 +80,18 @@ public class SearchCommand extends Command {
                 long duration = (endTime - startTime) / 1000000;
                 eb.setFooter("This took " + duration + " ms to respond.");
 
+                //Create MessageBuilder
+                MessageCreateBuilder message = new MessageCreateBuilder();
+
+                //Add the embed
+                message.addEmbeds(eb.build());
+
                //Generate the buttons, one per result
                 ArrayList<Button> buttonsToSend = bot.buttonListener.getButtons(buttonResults, userID);
-                MessageBuilder message = new MessageBuilder(eb.build());
 
                 //If there are 5 buttons or less, create a single ActionRow
                 if (buttonsToSend.size()<=5){
-                    message.setActionRows(ActionRow.of(buttonsToSend));
+                    message.addActionRow(buttonsToSend);
                     event.getHook().sendMessage(message.build()).queue();
 
                     //Disable the buttons after 10 minutes starting the execution of slash command
@@ -94,9 +99,8 @@ public class SearchCommand extends Command {
                 } else{
 
                     //If there are more than 5 buttons, create two ActionRows and split the buttons between the rows
-                    message.setActionRows(
-                            (ActionRow.of(buttonsToSend.subList(0, 5))),
-                            ActionRow.of((buttonsToSend.subList(5, buttonsToSend.size()))));
+                    message.addActionRow(buttonsToSend.subList(0, 5));
+                    message.addActionRow(buttonsToSend.subList(5, buttonsToSend.size()));
                     event.getHook().sendMessage(message.build()).queue();
 
                     //Disable the buttons after 10 minutes starting the execution of slash command
