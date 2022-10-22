@@ -2,6 +2,7 @@ package buckythebadgerbot.commands;
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.utility.HelpCommand;
 import buckythebadgerbot.commands.uwmadison.CourseCommand;
+import buckythebadgerbot.commands.uwmadison.GymCommand;
 import buckythebadgerbot.commands.uwmadison.ProfCommand;
 import buckythebadgerbot.commands.uwmadison.SearchCommand;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -31,7 +32,8 @@ public class CommandManager extends ListenerAdapter {
                 new CourseCommand(bot),
                 new ProfCommand(bot),
                 new SearchCommand(bot),
-                new HelpCommand(bot)
+                new HelpCommand(bot),
+                new GymCommand(bot)
         );
     }
 

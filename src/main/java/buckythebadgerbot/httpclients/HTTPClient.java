@@ -11,9 +11,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * A dedicated HTTP Client class to handle all HTTP requests for the bot
@@ -22,8 +22,14 @@ import java.util.List;
  * Parses JSON responses using `Jakarta JSON Processing` library
  */
 public class HTTPClient {
+
+    //Madgrade URL
     private static final String BASE_URL = "https://api.madgrades.com";
+    //RMP URL
     private static final String BASE_URL1 = "https://www.ratemyprofessors.com/graphql";
+    //Recwell (gym) URL
+    private static final String BASE_URL2 = "https://goboardapi.azurewebsites.net/api/FacilityCount/GetCountsByAccount?AccountAPIKey=7938FC89-A15C-492D-9566-12C961BC1F27";
+
 
     private final String apiKey;
     private final HttpClient httpClient;
@@ -34,6 +40,11 @@ public class HTTPClient {
      */
     public HTTPClient(String apiKey) {
         this.apiKey = apiKey;
+        this.httpClient = HttpClient.newHttpClient();
+    }
+
+    public HTTPClient(){
+        this.apiKey = null;
         this.httpClient = HttpClient.newHttpClient();
     }
 
@@ -311,5 +322,87 @@ public class HTTPClient {
             return new Professor(true, profInformation.get(1), profInformation.get(2), Double.parseDouble(profInformation.get(3)), Double.parseDouble(profInformation.get(4)), Double.parseDouble(profInformation.get(5)),
                     Integer.parseInt(profInformation.get(6)), profInformation.get(7), profInformation.get(8), profInformation.get(9), topFiveReviews, sortedProfCourses);
         }
+    }
+
+    public ArrayList<HashMap<String, String>> gymLookup(){
+        ArrayList<HashMap<String, String>> gymInformation = new ArrayList<>();
+        String url = BASE_URL2;
+
+        HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(url)).build();
+        HttpResponse<String> response;
+
+        try {
+            response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            return gymInformation;
+        }
+
+
+        JsonReader reader = Json.createReader(new StringReader(response.body()));
+        JsonArray jsonArray = reader.readArray();
+
+        String facilityName;
+        String locationName;
+        String currentCount;
+        String totalCapacity;
+        String lastUpdatedTime;
+
+        /*
+        ArrayList<String> nickFacility = new ArrayList<>();
+        ArrayList<String> shellFacility = new ArrayList<>();
+        ArrayList<String> aquaticsFacility = new ArrayList<>();
+        ArrayList<String> sportFacility = new ArrayList<>();
+
+         */
+
+        HashMap<String, String> nickFacility = new HashMap<>();
+        HashMap<String, String> shellFacility = new HashMap<>();
+        HashMap<String, String> aquaticsFacility = new HashMap<>();
+        HashMap<String, String> sportFacility = new HashMap<>();
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+
+        for (JsonValue e : jsonArray) {
+            facilityName = String.valueOf(e.asJsonObject().getJsonString("FacilityName")).replaceAll("\"", "");
+            locationName =  String.valueOf(e.asJsonObject().getJsonString("LocationName")).replaceAll("\"", "");
+            currentCount = String.valueOf(e.asJsonObject().asJsonObject().getJsonNumber("LastCount"));
+            totalCapacity = String.valueOf(e.asJsonObject().asJsonObject().getJsonNumber("TotalCapacity"));
+            lastUpdatedTime = null;
+            try{
+                Date dt = sdf.parse(String.valueOf(e.asJsonObject().asJsonObject().getJsonString("LastUpdatedDateAndTime")).replaceAll("\"", ""));
+                long unixTime = dt.getTime();
+                lastUpdatedTime = String.valueOf((int)(unixTime/1000));
+            } catch (ParseException parseException){
+                gymInformation.clear();
+                return gymInformation;
+            }
+            //Add the locations
+            if (facilityName.equals("Nicholas Recreation Center")){
+                /*
+                nickFacility.add(locationName + "\n"
+                        + "Count: " + currentCount + "/" + totalCapacity + "\n"
+                        + "Last updated: " + lastUpdatedTime);
+                 */
+                nickFacility.put(facilityName + ":" + locationName, "`" +  currentCount + "/" + totalCapacity + "`" + "\n"
+                        + "Last updated: " + "<t:" + lastUpdatedTime + ">");
+            } else if (facilityName.equals("Shell")){
+                shellFacility.put(facilityName + ":" + locationName, "Count: " + "`" +  currentCount + "/" + totalCapacity + "`" + "\n"
+                        + "Last updated: " +  "<t:" + lastUpdatedTime + ">");
+            } else if (facilityName.equals("Aquatics")){
+                aquaticsFacility.put(facilityName + ":" + locationName, "Count: " + "`" +  currentCount + "/" + totalCapacity + "`" + "\n"
+                        + "Last updated: " + "<t:" + lastUpdatedTime + ">");
+            } else if (facilityName.equals("Sport Programs Staff")){
+                sportFacility.put(facilityName + ":" + locationName, "Count: " + "`" +  currentCount + "/" + totalCapacity + "`" + "\n"
+                        + "Last updated: " +  "<t:" + lastUpdatedTime + ">");
+            }
+        }
+
+        gymInformation.add(nickFacility);
+        gymInformation.add(shellFacility);
+        gymInformation.add(aquaticsFacility);
+        gymInformation.add(sportFacility);
+
+        return gymInformation;
     }
 }
