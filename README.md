@@ -61,6 +61,16 @@ Example -
 
 ![Example3](https://cdn.discordapp.com/attachments/1007141650281279568/1007153325298438236/unknown.png)
 
+#### Gym Command
+
+`/gym`
+
+Check live usages for gym equipments at the Nicholas Recreation Center and the Shell.
+
+Example -
+
+![Example4](https://cdn.discordapp.com/attachments/1007141650281279568/1034288672641654825/unknown.png)
+
 ## Self Hosting
 
 To get a local copy of the bot up and running for development and testing purposes, follow these instructions.
