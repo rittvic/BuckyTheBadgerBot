@@ -75,7 +75,6 @@ public class HTTPClient {
             values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonNumber("number").toString());
             values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("code").toString().replaceAll("\"", ""));
             //replace certain characters to best match the abbreviations from madgrades with guide.wisc.edu
-            System.out.println("Before: " + jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("abbreviation").toString());
             values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("abbreviation").toString().
                     replaceAll(" ", "_").
                     replaceAll("-","_").
@@ -83,8 +82,6 @@ public class HTTPClient {
                     replaceAll("&","_").
                     replaceAll("\"", "").toLowerCase());
             values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonString("name").toString().replaceAll("\"", ""));
-
-            System.out.println("After: " + values.get(3));
 
         } catch (RuntimeException e) {
             return values;
