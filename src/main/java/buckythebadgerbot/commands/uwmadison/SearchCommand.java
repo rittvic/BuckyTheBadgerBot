@@ -52,7 +52,10 @@ public class SearchCommand extends Command {
             //Fetches the results by calling the API through the HTTP client.
             ArrayList<JsonObject> results = bot.madGradesClient.courseQuery(courseInfo);
             if (!results.isEmpty()){
+                //String to store the embed content
                 StringBuilder resultsDisplay = new StringBuilder();
+
+                //Declare and initialize an ArrayList of buttons to create
                 ArrayList<String> buttonResults = new ArrayList<>();
                 try {
                     for (JsonObject result : results) {
@@ -63,6 +66,8 @@ public class SearchCommand extends Command {
                     event.getHook().sendMessage("No results found.").queue();
                     return;
                 }
+
+                //String that displays the result size
                 String resultSizeDisplay;
                 if(results.size()>=10){
                     resultSizeDisplay = "Showing the first " + results.size() + " results.";

@@ -69,7 +69,7 @@ public class CourseCommand extends Command {
                     eb.setFooter("This took " + duration + " ms to respond.");
                     event.replyEmbeds(eb.build()).queue();
                 } else{
-                    event.reply("This course" + " (" +courseSearch.get(3).toUpperCase() + " " + courseSearch.get(1) + " - " + "'"+courseSearch.get(4)+"')" + " is no longer taught!").queue();
+                    event.reply("Unable to find information on `" + courseSearch.get(3).toUpperCase() + " " + courseSearch.get(1) + " - " + courseSearch.get(4)+"`").queue();
                 }
             } else {
                 event.reply("No courses found.").queue();

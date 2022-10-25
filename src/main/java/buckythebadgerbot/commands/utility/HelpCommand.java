@@ -11,7 +11,7 @@ import java.awt.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Command that sends a help menu consisting information of all slash commands and other help information such as GitHub link.
+ * Command that sends a help menu consisting information of all slash commands
  * NOTE: May choose to automate fetching all slash commands instead of hard-coding in the embed.
  */
 public class HelpCommand extends Command {
@@ -20,7 +20,7 @@ public class HelpCommand extends Command {
     public HelpCommand(BuckyTheBadgerBot bot) {
         super(bot);
         this.name = "help";
-        this.description = "Display all commands and other information";
+        this.description = "Display all commands";
     }
 
     @Override
@@ -57,7 +57,11 @@ public class HelpCommand extends Command {
                     .addField("Search", """
                             `/search <course to query>`\s
                              `e.g., <Calculus>, <Amer Ind>, <Math 340>, <500>`\s
-                             Queries through the courses and finds the best matches. It then generates buttons for each result.""", false);
+                             Queries through the courses and finds the best matches. It then generates buttons for each result.""", false)
+                    .addField("Gym", """
+                            `/gym`\s
+                             Check live usages for gym equipments at the Nicholas Recreation Center and the Shell.""", false)
+                    .setFooter("Unable to find a particular course? Blame madgrades api for being outdated. I might work on something of my own to fix this.");
             event.replyEmbeds(eb.build()).queue();
         }, bot.service);
     }

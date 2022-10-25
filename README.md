@@ -21,7 +21,7 @@ This queries through the courses and finds the best matches.  It then generates 
 
 Example -
 
-![Example1](https://cdn.discordapp.com/attachments/1007141650281279568/1007152844765405226/unknown.png)
+![Example1](https://cdn.discordapp.com/attachments/1007141650281279568/1034285519481344060/unknown.png)
 
 
 #### Course Command
