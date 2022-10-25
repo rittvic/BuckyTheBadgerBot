@@ -1,12 +1,15 @@
 package buckythebadgerbot.commands.uwmadison;
 
+import buckythebadgerbot.listeners.ButtonListener;
 import buckythebadgerbot.pojo.Professor;
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +29,7 @@ public class GymCommand extends Command {
     public GymCommand(BuckyTheBadgerBot bot) {
         super(bot);
         this.name = "gym";
-        this.description = "Display live gym building usage";
+        this.description = "Display live usage for every gym equipment at the Nicholas Recreation Center and the Shell";
     }
 
     /**
@@ -38,59 +41,53 @@ public class GymCommand extends Command {
     public void execute(SlashCommandInteractionEvent event) {
         CompletableFuture.runAsync(() -> {
             logger.info("Executing {}", GymCommand.class.getSimpleName());
-            long startTime = System.nanoTime();
-            event.deferReply().queue();
 
-            String userID = event.getUser().getId();
-            ArrayList<HashMap<String, String>> gymInformation = bot.gymClient.gymLookup();
+            //Create an ArrayList of embeds by calling the HTTP client's gymLookup() method
+            ArrayList<MessageEmbed> gymEmbeds = buildMenu(bot.gymClient.gymLookup());
 
-            if (!gymInformation.isEmpty()){
+            if (!gymEmbeds.isEmpty()){
+                //To send a paginated menu
+                ReplyCallbackAction action = event.replyEmbeds(gymEmbeds.get(0));
+                if (gymEmbeds.size() > 1){
+                    ButtonListener.sendPaginatedMenu(event.getUser().getId(), action, gymEmbeds);
+                    return;
+                }
+                action.queue();
+            } else{
+                event.reply("Unable to retrieve the live gym usages at this moment").queue();
+            }
+        }, bot.service);
+    }
 
-                ArrayList<Button> buttonsToSend = bot.buttonListener.getPaginatedButtons(userID, 1,4);
+    /**
+     * To build a paginated menu
+     * @param gymInformation the ArrayList with every embed to add onto the menu
+     * @return an ArrayList of all embeds in the menu
+     */
+    private ArrayList<MessageEmbed> buildMenu(ArrayList<HashMap<String, String>> gymInformation){
 
-                EmbedBuilder eb1 = new EmbedBuilder()
-                        .setTitle(gymInformation.get(0).keySet().stream().findFirst().get().split(":")[0])
-                        .setColor(Color.red);
+        //Create an ArrayList of embeds
+        ArrayList<MessageEmbed> embeds = new ArrayList<>();
 
-                for (HashMap<String, String> entry : gymInformation){
-                   for (String key : entry.keySet()){
-                       if (key.contains("Nicholas Recreation Center")) {
-                           eb1.addField(key.split(":")[1], entry.get(key), true);
-                       } //else if (key.contains("Shell")){
-                           //eb2.addField(key.split(":")[1], entry.get(key), true);
-                       //} else if (key.contains("Aquatics")){
-                           //eb3.addField(key.split(":")[1], entry.get(key), true);
-                      // } else if (key.contains("Sport Programs Staff")){
-                          // eb4.addField(key.split(":")[1], entry.get(key), true);
-                       //}
-                   }
+        if (!gymInformation.isEmpty()){
+
+            //Iterate through every HashMap in the ArrayList of gym information
+            for (HashMap<String, String> entry : gymInformation){
+                //Create a new embed
+                EmbedBuilder embed = new EmbedBuilder();
+                embed.setTitle(entry.keySet().stream().findFirst().get().split(":")[0]);
+                embed.setColor(Color.red);
+
+                //Iterate through every pair in the HashMap
+                for (String key : entry.keySet()){
+                    embed.addField(key.split(":")[1], entry.get(key), true);
                 }
 
-
-                long endTime = System.nanoTime();
-                long duration = (endTime - startTime) / 1000000;
-                eb1.setFooter("This took " + duration + " ms to respond.");
-
-                //Create MessageBuilder
-                MessageCreateBuilder message = new MessageCreateBuilder();
-
-                //Add the embed
-                message.addEmbeds(eb1.build());
-
-                //add the buttons
-                message.addActionRow(buttonsToSend);
-
-
-                event.getHook().sendMessage(message.build()).queue();
-
-                //Disable the buttons after 10 minutes starting the execution of slash command
-                event.getHook().editOriginalComponents(ActionRow.of(buttonsToSend).asDisabled()).queueAfter(10, TimeUnit.MINUTES);
-
-            } else{
-                event.reply("Unable to retrieve gym information at the moment").queue();
+                //Store the embed in the ArrayList
+                embeds.add(embed.build());
             }
-
-        }, bot.service);
+        }
+        return embeds;
     }
 }
 

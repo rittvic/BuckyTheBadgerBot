@@ -30,6 +30,9 @@ public class HTTPClient {
     //Recwell (gym) URL
     private static final String BASE_URL2 = "https://goboardapi.azurewebsites.net/api/FacilityCount/GetCountsByAccount?AccountAPIKey=7938FC89-A15C-492D-9566-12C961BC1F27";
 
+    //The standard timestamp format
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
 
     private final String apiKey;
     private final HttpClient httpClient;
@@ -71,20 +74,17 @@ public class HTTPClient {
             values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonString("uuid").toString().replaceAll("\"", ""));
             values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonNumber("number").toString());
             values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("code").toString().replaceAll("\"", ""));
-            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("abbreviation").toString().replaceAll(" ", "_").replaceAll("\"", "").toLowerCase());
+            //replace certain characters to best match the abbreviations from madgrades with guide.wisc.edu
+            System.out.println("Before: " + jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("abbreviation").toString());
+            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("abbreviation").toString().
+                    replaceAll(" ", "_").
+                    replaceAll("-","_").
+                    replaceAll("&_","").
+                    replaceAll("&","_").
+                    replaceAll("\"", "").toLowerCase());
             values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonString("name").toString().replaceAll("\"", ""));
 
-            System.out.println(values.get(3));
-            //Rename certain abbreviations to match with guide.wisc.edu
-            if (values.get(3).equalsIgnoreCase("com_dis")){
-                values.set(3, "cs_d");
-            } else if ( ( (values.get(3).equalsIgnoreCase("botany") || (values.get(3).equalsIgnoreCase("zoology")) ) && values.get(1).equals("133")) ){ //BOTANY/ZOOLOGY 133 no longer exists, only GENETICS 133
-                values.set(3, "genetics");
-            } else if(values.get(3).equalsIgnoreCase("l_sc_com")){
-                values.set(3, "lsc");
-            } else if (values.get(3).equalsIgnoreCase("m_s_&_e")){
-                values.set(3,"m_s_e");
-            }
+            System.out.println("After: " + values.get(3));
 
         } catch (RuntimeException e) {
             return values;
@@ -324,6 +324,10 @@ public class HTTPClient {
         }
     }
 
+    /**
+     * Fetch live usage of every gym facility/location
+     * @return An ArrayList of HashMaps for every main facility
+     */
     public ArrayList<HashMap<String, String>> gymLookup(){
         ArrayList<HashMap<String, String>> gymInformation = new ArrayList<>();
         String url = BASE_URL2;
@@ -337,39 +341,31 @@ public class HTTPClient {
             return gymInformation;
         }
 
-
         JsonReader reader = Json.createReader(new StringReader(response.body()));
         JsonArray jsonArray = reader.readArray();
 
+        //Set up Strings to store information
         String facilityName;
         String locationName;
         String currentCount;
         String totalCapacity;
         String lastUpdatedTime;
 
-        /*
-        ArrayList<String> nickFacility = new ArrayList<>();
-        ArrayList<String> shellFacility = new ArrayList<>();
-        ArrayList<String> aquaticsFacility = new ArrayList<>();
-        ArrayList<String> sportFacility = new ArrayList<>();
-
-         */
-
+        //Set up HashMap for the two facilities
         HashMap<String, String> nickFacility = new HashMap<>();
         HashMap<String, String> shellFacility = new HashMap<>();
-        HashMap<String, String> aquaticsFacility = new HashMap<>();
-        HashMap<String, String> sportFacility = new HashMap<>();
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 
 
         for (JsonValue e : jsonArray) {
+            //Store the respective information
             facilityName = String.valueOf(e.asJsonObject().getJsonString("FacilityName")).replaceAll("\"", "");
             locationName =  String.valueOf(e.asJsonObject().getJsonString("LocationName")).replaceAll("\"", "");
             currentCount = String.valueOf(e.asJsonObject().asJsonObject().getJsonNumber("LastCount"));
             totalCapacity = String.valueOf(e.asJsonObject().asJsonObject().getJsonNumber("TotalCapacity"));
             lastUpdatedTime = null;
+
             try{
+                //Convert the standard timestamp (GMT) to unix timestamp (epoch)
                 Date dt = sdf.parse(String.valueOf(e.asJsonObject().asJsonObject().getJsonString("LastUpdatedDateAndTime")).replaceAll("\"", ""));
                 long unixTime = dt.getTime();
                 lastUpdatedTime = String.valueOf((int)(unixTime/1000));
@@ -377,31 +373,19 @@ public class HTTPClient {
                 gymInformation.clear();
                 return gymInformation;
             }
-            //Add the locations
+            //Add the locations to the respective hashmap
             if (facilityName.equals("Nicholas Recreation Center")){
-                /*
-                nickFacility.add(locationName + "\n"
-                        + "Count: " + currentCount + "/" + totalCapacity + "\n"
-                        + "Last updated: " + lastUpdatedTime);
-                 */
-                nickFacility.put(facilityName + ":" + locationName, "`" +  currentCount + "/" + totalCapacity + "`" + "\n"
+                nickFacility.put(facilityName + ":" + locationName, "Usage: `" +  currentCount + "/" + totalCapacity + "`" + "\n"
                         + "Last updated: " + "<t:" + lastUpdatedTime + ">");
             } else if (facilityName.equals("Shell")){
-                shellFacility.put(facilityName + ":" + locationName, "Count: " + "`" +  currentCount + "/" + totalCapacity + "`" + "\n"
-                        + "Last updated: " +  "<t:" + lastUpdatedTime + ">");
-            } else if (facilityName.equals("Aquatics")){
-                aquaticsFacility.put(facilityName + ":" + locationName, "Count: " + "`" +  currentCount + "/" + totalCapacity + "`" + "\n"
-                        + "Last updated: " + "<t:" + lastUpdatedTime + ">");
-            } else if (facilityName.equals("Sport Programs Staff")){
-                sportFacility.put(facilityName + ":" + locationName, "Count: " + "`" +  currentCount + "/" + totalCapacity + "`" + "\n"
+                shellFacility.put(facilityName + ":" + locationName, "Usage: `" +  currentCount + "/" + totalCapacity + "`" + "\n"
                         + "Last updated: " +  "<t:" + lastUpdatedTime + ">");
             }
         }
 
+        //add every hashmap to the ArrayList
         gymInformation.add(nickFacility);
         gymInformation.add(shellFacility);
-        gymInformation.add(aquaticsFacility);
-        gymInformation.add(sportFacility);
 
         return gymInformation;
     }
