@@ -3,11 +3,14 @@ package buckythebadgerbot.listeners;
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.httpclients.Scraper;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -17,6 +20,8 @@ import java.awt.*;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -41,6 +46,9 @@ public class ButtonListener extends ListenerAdapter {
     //Map to store the paginated buttons for a paginated menu
     public static final Map<String, List<Button>> paginationButtons = new HashMap<>();
 
+    //Scheduler to disable buttons after a set period of time
+    public static final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(20);
+
     public ButtonListener(BuckyTheBadgerBot bot) {
         this.bot = bot;
     }
@@ -51,10 +59,11 @@ public class ButtonListener extends ListenerAdapter {
      * @param userID the user id of the user who initiated the SearchCommand
      * @return an ArrayList of Buttons to add onto Action Rows
      */
-    public ArrayList<Button> getButtons(ArrayList<String> results, String userID) {
+    public static ArrayList<Button> getButtons(ArrayList<String> results, String userID) {
+        String uuid = userID + ":" + UUID.randomUUID();
         ArrayList<Button> buttonResults = new ArrayList<>();
         for (String result : results) {
-            buttonResults.add(Button.secondary(userID+":"+result, result));
+            buttonResults.add(Button.secondary(uuid+":"+result, result));
         }
         return buttonResults;
     }
@@ -66,24 +75,44 @@ public class ButtonListener extends ListenerAdapter {
      * @param embeds the list of embeds for the menu
      */
     public static void sendPaginatedMenu(String userID, ReplyCallbackAction action, List<MessageEmbed> embeds) {
-        List<Button> components = getPaginationButtons(userID, embeds.size());
-        paginationButtons.put(userID, components);
-        paginatedMenus.put(userID, embeds);
+        String uuid = userID + ":" + UUID.randomUUID();
+        List<Button> components = getPaginationButtons(uuid, embeds.size());
+        paginationButtons.put(uuid, components);
+        paginatedMenus.put(uuid, embeds);
         //Add the updated buttons and disable them after 10 minutes
-        action.setActionRow(components).queue(interactionHook -> interactionHook.editOriginalComponents(ActionRow.of(components).asDisabled()).queueAfter(10, TimeUnit.MINUTES));
+        action.setActionRow(components).queue(interactionHook -> disableButtons(uuid, interactionHook));
     }
 
     /**
      * Create and send the paginated buttons
-     * @param userID the user id of the user who initiated the search command
+     * @param uuid the user ID + random UUID
      * @param maxPages the maximum number of pages on the menu
      * @return a list of the paginated buttons
      */
-    private static List<Button> getPaginationButtons(String userID, int maxPages) {
-        return Arrays.asList(Button.primary(userID + ":pagination:prev", "Previous").asDisabled(),
+    private static List<Button> getPaginationButtons(String uuid, int maxPages) {
+        return Arrays.asList(Button.primary(uuid+":pagination:prev", "Previous").asDisabled(),
         Button.secondary("pagination:page:0", "1/" + maxPages).asDisabled(),
-        Button.primary(userID + ":pagination:next", "Next")
+        Button.primary(uuid+":pagination:next", "Next")
         );
+    }
+
+    /**
+     * Disable pagination buttons after 10 minutes
+     * @param uuid the user ID + random UUID of the buttons to disable
+     * @param hook The message hook pointing to the original message
+     */
+    public static void disableButtons(String uuid, InteractionHook hook) {
+        Runnable task = () -> {
+            List<Button> actionRow = ButtonListener.paginationButtons.get(uuid);
+            List<Button> newActionRow = new ArrayList<>();
+            for (Button button : actionRow) {
+                newActionRow.add(button.asDisabled());
+            }
+            hook.editOriginalComponents(ActionRow.of(newActionRow)).queue();
+            ButtonListener.paginationButtons.remove(uuid);
+            ButtonListener.paginatedMenus.remove(uuid);
+        };
+        ButtonListener.scheduledExecutor.schedule(task, 10, TimeUnit.MINUTES);
     }
 
 
@@ -97,23 +126,28 @@ public class ButtonListener extends ListenerAdapter {
         CompletableFuture.runAsync(() -> {
             logger.info("Executing {}", ButtonListener.class.getSimpleName());
 
-            //Store what was pressed
+            //Check what was pressed
+            //If Search Command: [0] User ID [1] UUID [2] Course
+            //If Gym Command: [0] User ID [1] UUID [2] "pagination" [3] either "Next" or "Previous"
             String[] pressedArgs = event.getComponentId().split(":");
-            String buttonName = event.getButton().getLabel();
+
+            //Store the user ID of who pressed the button
             String eventUserID = event.getUser().getId();
 
-            //If paginated buttons were pressed, retrieve them accordingly with the user
-            List<Button>components = paginationButtons.get(eventUserID);
+            //Get pagination buttons
+            List<Button>components = paginationButtons.get(pressedArgs[0]+":"+pressedArgs[1]);
 
             //For the course command - if the user didn't press the same button within 30 seconds, the task executes and the user gets added to the cooldown after.
             //Otherwise, they get a message saying to wait until 30 seconds has passed since the initial button press.
-            if ( (!coolDownChecker.containsKey(eventUserID+":"+pressedArgs[1]) || System.currentTimeMillis() > coolDownChecker.get(eventUserID+":"+pressedArgs[1]) + 30000) && pressedArgs.length == 2){
+            if (pressedArgs.length == 3 &&
+                    (!coolDownChecker.containsKey(eventUserID+":"+pressedArgs[1]+":"+pressedArgs[2])
+                            || System.currentTimeMillis() > coolDownChecker.get(eventUserID+":"+pressedArgs[1]+":"+pressedArgs[2]) + 30000)){
                 long startTime = System.nanoTime();
                 event.deferReply().queue();
                 ArrayList<String> courseSearch;
                 ArrayList<String> courseInformation;
                 String averageGPA;
-                courseSearch = bot.madGradesClient.courseLookUp(buttonName);
+                courseSearch = bot.madGradesClient.courseLookUp(event.getButton().getLabel());
                 if (!courseSearch.isEmpty()) {
                     averageGPA = bot.madGradesClient.courseAverageGPA(courseSearch.get(0));
                     courseInformation = Scraper.scrapeThis(courseSearch.get(1),courseSearch.get(3));
@@ -140,17 +174,18 @@ public class ButtonListener extends ListenerAdapter {
                 }
 
                 //Adds the user and the button they pressed to the cooldown
-                coolDownChecker.put(eventUserID+":"+pressedArgs[1], System.currentTimeMillis());
+                coolDownChecker.put(eventUserID+":"+pressedArgs[1]+":"+pressedArgs[2], System.currentTimeMillis());
 
                 //For the /gym command - condition to check if the buttons are part of a pagination menu
-            } else if (pressedArgs[1].equals("pagination")){
+            } else if (pressedArgs[2].equals("pagination")){
+
                 //Check if the user requested the original menu
-                if (paginatedMenus.get(eventUserID) != null){
+                if (pressedArgs[0].equals(eventUserID)){
                     //If the "Next" button was pressed
-                    if (pressedArgs[2].equals("next")) {
+                    if (pressedArgs[3].equals("next")) {
                         // Move to next embed
                         int page = Integer.parseInt(components.get(1).getId().split(":")[2]) + 1;
-                        List<MessageEmbed> embeds = paginatedMenus.get(eventUserID);
+                        List<MessageEmbed> embeds = paginatedMenus.get(pressedArgs[0]+":"+pressedArgs[1]);
                         if (page < embeds.size()) {
                             // Update buttons
                             components.set(1, components.get(1).withId("pagination:page:" + page).withLabel((page + 1) + "/" + embeds.size()));
@@ -158,14 +193,15 @@ public class ButtonListener extends ListenerAdapter {
                             if (page == embeds.size() - 1) {
                                 components.set(2, components.get(2).asDisabled());
                             }
-                            paginationButtons.put(eventUserID, components);
+                            paginationButtons.put(pressedArgs[0]+":"+pressedArgs[1], components);
                             event.editComponents(ActionRow.of(components)).setEmbeds(embeds.get(page)).queue();
                         }
+
                         //If the "Previous" button was pressed
-                    } else if (pressedArgs[2].equals("prev")) {
+                    } else if (pressedArgs[3].equals("prev")) {
                         // Move to previous embed
                         int page = Integer.parseInt(components.get(1).getId().split(":")[2]) - 1;
-                        List<MessageEmbed> embeds = paginatedMenus.get(eventUserID);
+                        List<MessageEmbed> embeds = paginatedMenus.get(pressedArgs[0]+":"+pressedArgs[1]);
                         if (page >= 0) {
                             // Update buttons
                             components.set(1, components.get(1).withId("pagination:page:" + page).withLabel((page + 1) + "/" + embeds.size()));
@@ -173,7 +209,7 @@ public class ButtonListener extends ListenerAdapter {
                             if (page == 0) {
                                 components.set(0, components.get(0).asDisabled());
                             }
-                            paginationButtons.put(eventUserID, components);
+                            paginationButtons.put(pressedArgs[0]+":"+pressedArgs[1], components);
                             event.editComponents(ActionRow.of(components)).setEmbeds(embeds.get(page)).queue();
                         }
                     }

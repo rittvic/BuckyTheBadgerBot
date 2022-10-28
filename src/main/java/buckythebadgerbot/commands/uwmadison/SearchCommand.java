@@ -1,7 +1,7 @@
 package buckythebadgerbot.commands.uwmadison;
-
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
+import buckythebadgerbot.listeners.ButtonListener;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
@@ -92,7 +92,7 @@ public class SearchCommand extends Command {
                 message.addEmbeds(eb.build());
 
                //Generate the buttons, one per result
-                ArrayList<Button> buttonsToSend = bot.buttonListener.getButtons(buttonResults, userID);
+                ArrayList<Button> buttonsToSend = ButtonListener.getButtons(buttonResults, userID);
 
                 //If there are 5 buttons or less, create a single ActionRow
                 if (buttonsToSend.size()<=5){
@@ -113,7 +113,6 @@ public class SearchCommand extends Command {
                             ActionRow.of(buttonsToSend.subList(0,5)).asDisabled(),
                            ActionRow.of(buttonsToSend.subList(5,buttonsToSend.size())).asDisabled()
                     ).queueAfter(10, TimeUnit.MINUTES);
-
                 }
             } else{
                 event.getHook().sendMessage("No results found.").queue();
