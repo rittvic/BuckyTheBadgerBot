@@ -1,18 +1,18 @@
 package buckythebadgerbot.httpclients;
 
-
 import buckythebadgerbot.pojo.Professor;
-
 import javax.json.*;
 import java.io.IOException;
 import java.io.StringReader;
-import java.net.*;
+import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Duration;
 import java.util.*;
 
 /**
@@ -329,7 +329,7 @@ public class HTTPClient {
         ArrayList<HashMap<String, String>> gymInformation = new ArrayList<>();
         String url = BASE_URL2;
 
-        HttpRequest request = HttpRequest.newBuilder().GET().uri(URI.create(url)).build();
+        HttpRequest request = HttpRequest.newBuilder().GET().timeout(Duration.ofSeconds(5)).uri(URI.create(url)).build();
         HttpResponse<String> response;
 
         try {

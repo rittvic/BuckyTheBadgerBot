@@ -49,7 +49,7 @@ public class GymCommand extends Command {
                 }
                 action.queue();
             } else{
-                event.reply("Unable to retrieve the live gym usages at this moment").queue();
+                event.reply(event.getUser().getAsMention() + "Unable to retrieve the live gym usages at this moment!").queue();
             }
         }, bot.service);
     }
