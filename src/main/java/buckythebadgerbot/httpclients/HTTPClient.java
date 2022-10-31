@@ -14,6 +14,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A dedicated HTTP Client class to handle all HTTP requests for the bot
@@ -362,10 +363,13 @@ public class HTTPClient {
             lastUpdatedTime = null;
 
             try{
-                //Convert the standard timestamp (GMT) to unix timestamp (epoch)
+                //Convert the standard timestamp (GMT-5) to unix timestamp (epoch)
                 Date dt = sdf.parse(String.valueOf(e.asJsonObject().asJsonObject().getJsonString("LastUpdatedDateAndTime")).replaceAll("\"", ""));
-                long unixTime = dt.getTime();
-                lastUpdatedTime = String.valueOf((int)(unixTime/1000));
+
+                //We have to add five hours since the prod bot treats it as GMT-10
+                long epoch = dt.getTime() + TimeUnit.HOURS.toMillis(5);
+
+                lastUpdatedTime = String.valueOf((int)(epoch/1000));
             } catch (ParseException parseException){
                 gymInformation.clear();
                 return gymInformation;
