@@ -61,6 +61,10 @@ public class HelpCommand extends Command {
                     .addField("Gym", """
                             `/gym`\s
                              Check live usages for gym equipments at the Nicholas Recreation Center and the Shell.""", false)
+                    .addField("Dining Menu", """
+                            `/diningmenu <dining market> <menu type>`\s
+                             `e.g., <Rheta's Market> <Breakfast>, <Gordon Avenue Market> <Lunch>, <Four Lakes Market> <Dinner>`\s
+                             Display a dining menu consisting of every station and its food items within every category""", false)
                     .setFooter("Unable to find a particular course? Blame madgrades api for being outdated. I might work on something of my own to fix this.");
             event.replyEmbeds(eb.build()).queue();
         }, bot.service);
