@@ -37,9 +37,6 @@ public class ButtonListener extends ListenerAdapter {
     //Follows the format "userID:buttonName"=timestamp
     private static final Map<String,Long> coolDownChecker = Collections.synchronizedMap(new LinkedHashMap<>());
 
-    //To iterate each element that meets the conditions of being expired
-    private final Iterator<Map.Entry<String,Long>> iterator = coolDownChecker.entrySet().iterator();
-
     //Map to store every embed for a paginated menu
     public static final Map<String, List<MessageEmbed>> paginatedMenus = new HashMap<>();
 
@@ -221,6 +218,7 @@ public class ButtonListener extends ListenerAdapter {
 
             //Clean map of expired timestamps
             //NOTE: Doing a while loop is faster than Collection.removeif by a few milliseconds since it only iterates through expired elements
+            Iterator<Map.Entry<String,Long>> iterator = coolDownChecker.entrySet().iterator();
             while(iterator.hasNext()){
                 Map.Entry<String,Long> entry = iterator.next();
                 //Check if the timestamp has expired (entry value)

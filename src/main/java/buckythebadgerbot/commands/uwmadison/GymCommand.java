@@ -64,7 +64,7 @@ public class GymCommand extends Command {
         //Create an ArrayList of embeds
         ArrayList<MessageEmbed> embeds = new ArrayList<>();
 
-        if (!gymInformation.isEmpty()){
+        if (gymInformation != null){
 
             //Iterate through every HashMap in the ArrayList of gym information
             for (HashMap<String, String> entry : gymInformation){

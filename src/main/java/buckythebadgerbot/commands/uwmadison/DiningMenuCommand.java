@@ -15,10 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.awt.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -107,24 +104,50 @@ public class DiningMenuCommand extends Command {
         ArrayList<MessageEmbed> embeds = new ArrayList<>();
 
         if (stations != null){
-            for (Map.Entry<String,String> entry :  stations.entrySet()){
-                //Create new embed
-                EmbedBuilder embed = new EmbedBuilder();
-                embed.setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + entry.getKey().split(":")[1]);
-                embed.setThumbnail(thumbnail.url);
-                embed.setFooter("Date - " + LocalDate.now());
-                embed.setColor(Color.red);
-                //Populate an Array of food items within the station
-                String[] foodItems = entry.getValue().split(":");
-                //Iterate and add every food item to the embed as a field
-                for (String foodName : foodItems){
-                    String[] splitArgs = foodName.split("-");
-                    if (!foodName.equals("null")){
-                        embed.addField(splitArgs[1], splitArgs[0] + "\n" + splitArgs[2], true);
-                    }
+            Iterator<Map.Entry<String, String>> iterator = stations.entrySet().iterator();
+
+            //Previous station pointer for hashmap iteration
+            String prevStation = null;
+
+            //Declare and initialize EmbedBuilder
+            EmbedBuilder embed = new EmbedBuilder();
+
+            //Iterate through the HashMap
+            while (iterator.hasNext()) {
+                //Grab the current entry
+                Map.Entry<String, String> entry = iterator.next();
+                //Obtain the station in the current entry
+                String currentStation = entry.getKey().split("-0")[1];
+                //Check if it on the first entry
+                if (prevStation == null){
+                    //Initialize embed to new EmbedBuilder object with edited title
+                    embed = new EmbedBuilder()
+                            .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
+                            .setThumbnail(thumbnail.url)
+                            .setFooter("Date - " + LocalDate.now())
+                            .setColor(Color.red);
+
+                //Check if the current station is not equal to the station in the previous entry (which means it's a new station)
+                } else if (!currentStation.equals(prevStation)){
+                    //Build the previous embed and add to the ArrayList before initializing the embed to a new EmbedBuilder
+                    embeds.add(embed.build());
+                    //Initialize embed to new EmbedBuilder object with edited title
+                    embed = new EmbedBuilder()
+                            .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
+                            .setThumbnail(thumbnail.url)
+                            .setFooter("Date - " + LocalDate.now())
+                            .setColor(Color.red);
                 }
-                //Store the embed in the ArrayList
-                embeds.add(embed.build());
+                //Add a new field of the food type and every food item that corresponds with the type
+                embed.addField(entry.getKey().split("-0")[2],entry.getValue(),false);
+
+                //Set previous pointer to the current pointer (station)
+                prevStation = currentStation;
+
+                //If it is currently on the last entry, build the embed and add it to the ArrayList
+                if (!iterator.hasNext()){
+                    embeds.add(embed.build());
+                }
             }
         }
         return embeds;

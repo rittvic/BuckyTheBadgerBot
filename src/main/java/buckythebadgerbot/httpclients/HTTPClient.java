@@ -338,7 +338,7 @@ public class HTTPClient {
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
-            return gymInformation;
+            return null;
         }
 
         JsonReader reader = Json.createReader(new StringReader(response.body()));
@@ -374,7 +374,7 @@ public class HTTPClient {
                 lastUpdatedTime = String.valueOf((int)(epoch/1000));
             } catch (ParseException parseException){
                 gymInformation.clear();
-                return gymInformation;
+                return null;
             }
             //Add the locations to the respective hashmap
             if (facilityName.equals("Nicholas Recreation Center")){
@@ -430,10 +430,10 @@ public class HTTPClient {
                 }
             }
 
-            //HashMap in the format of {StationID:StationName=<every food item in the station split by ":">}
-            HashMap<String,String> stations = new HashMap<>();
+            //LinkedHashMap in the format of {stationID-0stationName-0foodCategory = String containing all the items in the station and its category
+            LinkedHashMap<String,String> stations = new LinkedHashMap<>();
 
-            //HashMap to retrieve the "StationID:StationName" format from above HashMap by getting the station ID alone
+            //HashMap to retrieve the stationID-0stationName-0foodCategory key from above HashMap by getting the station ID alone
             HashMap<String,String> stationsKey = new HashMap<>();
 
             //Get total number of stations
@@ -445,14 +445,11 @@ public class HTTPClient {
                 String stationID = entry.getKey();
                 //Obtain station name
                 String stationName = entry.getValue().asJsonObject().getJsonObject("section_options").getString("display_name");
-                //Store in hashmap with initial filler value of "null"
-                stations.put(stationID + ":" + stationName, "null");
                 //Store the station ID associated with the respective key format
-                stationsKey.put(stationID,stationID + ":" + stationName);
+                stationsKey.put(stationID,stationID + "-0" + stationName);
             }
-            System.out.println(stations);
 
-            //Get total number of food items for the current day
+            //Get total number of food items
             int numItems = day.getJsonArray("menu_items").size();
 
             //Iterate through every food item
@@ -463,8 +460,6 @@ public class HTTPClient {
                     String stationID = day.getJsonArray("menu_items").get(i).asJsonObject().getJsonNumber("menu_id").toString();
                     //Obtain name of the food item
                     String foodName = day.getJsonArray("menu_items").get(i).asJsonObject().get("food").asJsonObject().getString("name");
-                    //Get the associated key with the station ID
-                    String key = stationsKey.get(stationID);
                     //Get the category of the food (entree or side)
                     String foodCategory = day.getJsonArray("menu_items").get(i).asJsonObject().get("food").asJsonObject().getString("food_category");
                     if (foodCategory.isBlank()){
@@ -472,13 +467,20 @@ public class HTTPClient {
                     }
                     //Uppercase the first letter of food category
                     foodCategory = foodCategory.substring(0,1).toUpperCase() + foodCategory.substring(1);
+                    //Get the associated key with the station ID and add the food category to it
+                    String key = stationsKey.get(stationID) + "-0" + foodCategory;
                     //Get the calories of the food
                     String calories = day.getJsonArray("menu_items").get(i).asJsonObject().get("food").asJsonObject().getJsonObject("rounded_nutrition_info").get("calories").toString().replace(".0","");
                     if (calories.equals("null")){
                         calories = "N/A";
                     }
-                    //Add onto hashmap
-                    stations.put(key,stations.get(key) + ":" + foodCategory + "-" + foodName + "-" + calories + " Cal");
+
+                    //{stationID-0stationName-0foodCategory = String containing all the items in the station and its category
+                    if (stations.get(key) == null){
+                        stations.put(key,"\n" + ":arrow_forward: **" +  foodName + "**"  + "\n" + calories + " Cal");
+                    } else {
+                        stations.put(key,stations.get(key) + "\n" + ":arrow_forward: **" +  foodName + "**"  + "\n" + calories + " Cal");
+                    }
                 }
             }
             return stations;
