@@ -38,7 +38,7 @@ public class ButtonListener extends ListenerAdapter {
     private static final Map<String,Long> coolDownChecker = Collections.synchronizedMap(new LinkedHashMap<>());
 
     //To iterate each element that meets the conditions of being expired
-    private final Iterator<Map.Entry<String,Long>> entry = coolDownChecker.entrySet().iterator();
+    private final Iterator<Map.Entry<String,Long>> iterator = coolDownChecker.entrySet().iterator();
 
     //Map to store every embed for a paginated menu
     public static final Map<String, List<MessageEmbed>> paginatedMenus = new HashMap<>();
@@ -46,7 +46,7 @@ public class ButtonListener extends ListenerAdapter {
     //Map to store the paginated buttons for a paginated menu
     public static final Map<String, List<Button>> paginationButtons = new HashMap<>();
 
-    //Scheduler to disable buttons after a set period of time
+    //Scheduler to disable paginated buttons after a set period of time
     public static final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(20);
 
     public ButtonListener(BuckyTheBadgerBot bot) {
@@ -128,7 +128,7 @@ public class ButtonListener extends ListenerAdapter {
 
             //Check what was pressed
             //If Search Command: [0] User ID [1] UUID [2] Course
-            //If Gym Command: [0] User ID [1] UUID [2] "pagination" [3] either "Next" or "Previous"
+            //If command that uses pagination menu: [0] User ID [1] UUID [2] "pagination" [3] either "Next" or "Previous"
             String[] pressedArgs = event.getComponentId().split(":");
 
             //Store the user ID of who pressed the button
@@ -176,9 +176,8 @@ public class ButtonListener extends ListenerAdapter {
                 //Adds the user and the button they pressed to the cooldown
                 coolDownChecker.put(eventUserID+":"+pressedArgs[1]+":"+pressedArgs[2], System.currentTimeMillis());
 
-                //For the /gym command - condition to check if the buttons are part of a pagination menu
+                //For the pagination command - condition to check if the buttons are part of a pagination  menu
             } else if (pressedArgs[2].equals("pagination")){
-
                 //Check if the user requested the original menu
                 if (pressedArgs[0].equals(eventUserID)){
                     //If the "Next" button was pressed
@@ -222,10 +221,12 @@ public class ButtonListener extends ListenerAdapter {
 
             //Clean map of expired timestamps
             //NOTE: Doing a while loop is faster than Collection.removeif by a few milliseconds since it only iterates through expired elements
-            while(entry.hasNext()){
-                Map.Entry<String,Long> actualEntry = entry.next();
-                if(actualEntry.getValue()+30000<System.currentTimeMillis()){
-                    entry.remove();
+            while(iterator.hasNext()){
+                Map.Entry<String,Long> entry = iterator.next();
+                //Check if the timestamp has expired (entry value)
+                if(entry.getValue()+30000<System.currentTimeMillis()){
+                    // remove the entire entry from the hashmap through the iterator
+                    iterator.remove();
                 }
             }
         }, bot.service);

@@ -13,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -30,10 +31,11 @@ public class HTTPClient {
     private static final String BASE_URL1 = "https://www.ratemyprofessors.com/graphql";
     //Recwell (gym) URL
     private static final String BASE_URL2 = "https://goboardapi.azurewebsites.net/api/FacilityCount/GetCountsByAccount?AccountAPIKey=7938FC89-A15C-492D-9566-12C961BC1F27";
+    //Dining hall URL
+    private static final String BASE_URL3 = "https://wisc-housingdining.nutrislice.com";
 
     //The standard timestamp format
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
-
 
     private final String apiKey;
     private final HttpClient httpClient;
@@ -354,17 +356,17 @@ public class HTTPClient {
         HashMap<String, String> shellFacility = new HashMap<>();
 
 
-        for (JsonValue e : jsonArray) {
+        for (JsonValue equipment : jsonArray) {
             //Store the respective information
-            facilityName = String.valueOf(e.asJsonObject().getJsonString("FacilityName")).replaceAll("\"", "");
-            locationName =  String.valueOf(e.asJsonObject().getJsonString("LocationName")).replaceAll("\"", "");
-            currentCount = String.valueOf(e.asJsonObject().asJsonObject().getJsonNumber("LastCount"));
-            totalCapacity = String.valueOf(e.asJsonObject().asJsonObject().getJsonNumber("TotalCapacity"));
+            facilityName = String.valueOf(equipment.asJsonObject().getJsonString("FacilityName")).replaceAll("\"", "");
+            locationName =  String.valueOf(equipment.asJsonObject().getJsonString("LocationName")).replaceAll("\"", "");
+            currentCount = String.valueOf(equipment.asJsonObject().asJsonObject().getJsonNumber("LastCount"));
+            totalCapacity = String.valueOf(equipment.asJsonObject().asJsonObject().getJsonNumber("TotalCapacity"));
             lastUpdatedTime = null;
 
             try{
                 //Convert the standard timestamp (GMT-5) to unix timestamp (epoch)
-                Date dt = sdf.parse(String.valueOf(e.asJsonObject().asJsonObject().getJsonString("LastUpdatedDateAndTime")).replaceAll("\"", ""));
+                Date dt = sdf.parse(String.valueOf(equipment.asJsonObject().asJsonObject().getJsonString("LastUpdatedDateAndTime")).replaceAll("\"", ""));
 
                 //We have to add five hours since the prod bot treats it as GMT-10
                 long epoch = dt.getTime() + TimeUnit.HOURS.toMillis(5);
@@ -390,4 +392,101 @@ public class HTTPClient {
 
         return gymInformation;
     }
+
+    public HashMap<String,String> diningMenuLookup(String diningMarket, String menuType){
+
+        //Get today's date
+        String date = "\""+ LocalDate.now()+"\"";
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .GET()
+                .uri(URI.create(BASE_URL3+"/menu/api/weeks/school/"+diningMarket+"/menu-type/"+menuType+"/"
+                        +date.replaceAll("-","/").replaceAll("\"","")+"/"))
+                .build();
+        HttpResponse<String> response;
+
+        try {
+            response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            return null;
+        }
+        JsonReader reader = Json.createReader(new StringReader(response.body()));
+        JsonObject jsonObject = reader.readObject();
+
+        try{
+            //Get the total number of days in the menu week (usually 7)
+            int numDays = jsonObject.asJsonObject().getJsonArray("days").size();
+
+            //Declare JsonObject day
+            JsonObject day = null;
+            //Iterate through every day of week in the menu
+            for (int i = 0; i < numDays; i++){
+                //Check if the day matches with the passed day
+                if (jsonObject.asJsonObject().getJsonArray("days").get(i).asJsonObject().getJsonString("date").toString().equals(date)){
+                    //Assign JsonObject day to the matched day and break out of the loop
+                    day = jsonObject.asJsonObject().getJsonArray("days").get(i).asJsonObject();
+                    break;
+                }
+            }
+
+            //HashMap in the format of {StationID:StationName=<every food item in the station split by ":">}
+            HashMap<String,String> stations = new HashMap<>();
+
+            //HashMap to retrieve the "StationID:StationName" format from above HashMap by getting the station ID alone
+            HashMap<String,String> stationsKey = new HashMap<>();
+
+            //Get total number of stations
+            int numStations = day.asJsonObject().getJsonObject("menu_info").size();
+
+            //Iterate through every station
+            for (Map.Entry<String,JsonValue> entry : day.asJsonObject().getJsonObject("menu_info").entrySet()){
+                //Obtain station ID (menu_ID)
+                String stationID = entry.getKey();
+                //Obtain station name
+                String stationName = entry.getValue().asJsonObject().getJsonObject("section_options").getString("display_name");
+                //Store in hashmap with initial filler value of "null"
+                stations.put(stationID + ":" + stationName, "null");
+                //Store the station ID associated with the respective key format
+                stationsKey.put(stationID,stationID + ":" + stationName);
+            }
+            System.out.println(stations);
+
+            //Get total number of food items for the current day
+            int numItems = day.getJsonArray("menu_items").size();
+
+            //Iterate through every food item
+            for (int i = 0; i < numItems; i++){
+                //Check if the value type is not NULL
+                if (day.getJsonArray("menu_items").get(i).asJsonObject().get("food").getValueType() != JsonValue.ValueType.NULL){
+                    //Obtain station ID (menu_id) associated with the food item
+                    String stationID = day.getJsonArray("menu_items").get(i).asJsonObject().getJsonNumber("menu_id").toString();
+                    //Obtain name of the food item
+                    String foodName = day.getJsonArray("menu_items").get(i).asJsonObject().get("food").asJsonObject().getString("name");
+                    //Get the associated key with the station ID
+                    String key = stationsKey.get(stationID);
+                    //Get the category of the food (entree or side)
+                    String foodCategory = day.getJsonArray("menu_items").get(i).asJsonObject().get("food").asJsonObject().getString("food_category");
+                    if (foodCategory.isBlank()){
+                        foodCategory = "unknown";
+                    }
+                    //Uppercase the first letter of food category
+                    foodCategory = foodCategory.substring(0,1).toUpperCase() + foodCategory.substring(1);
+                    //Get the calories of the food
+                    String calories = day.getJsonArray("menu_items").get(i).asJsonObject().get("food").asJsonObject().getJsonObject("rounded_nutrition_info").get("calories").toString().replace(".0","");
+                    if (calories.equals("null")){
+                        calories = "N/A";
+                    }
+                    //Add onto hashmap
+                    stations.put(key,stations.get(key) + ":" + foodCategory + "-" + foodName + "-" + calories + " Cal");
+                }
+            }
+            return stations;
+        } catch (NullPointerException e){
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
 }

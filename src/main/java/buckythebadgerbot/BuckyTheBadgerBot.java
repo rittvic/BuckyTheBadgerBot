@@ -22,7 +22,7 @@ public class BuckyTheBadgerBot {
 
     public HTTPClient madGradesClient;
     public HTTPClient RMPClient;
-    public HTTPClient gymClient;
+    public HTTPClient client;
     public ExecutorService service;
     public final @NotNull ButtonListener buttonListener;
     public @NotNull final Dotenv config;
@@ -37,7 +37,7 @@ public class BuckyTheBadgerBot {
         //Setup HTTP tools
         madGradesClient = new HTTPClient(config.get("MADGRADES_TOKEN"));
         RMPClient = new HTTPClient(config.get("RMP_TOKEN"));
-        gymClient = new HTTPClient();
+        client = new HTTPClient();
 
         //Setup threadpool
         //NOTE: May choose to setup a certain amount of threads in the future

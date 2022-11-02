@@ -38,10 +38,10 @@ public class GymCommand extends Command {
             logger.info("Executing {}", GymCommand.class.getSimpleName());
 
             //Create an ArrayList of embeds by calling the HTTP client's gymLookup() method
-            ArrayList<MessageEmbed> gymEmbeds = buildMenu(bot.gymClient.gymLookup());
+            ArrayList<MessageEmbed> gymEmbeds = buildMenu(bot.client.gymLookup());
 
             if (!gymEmbeds.isEmpty()){
-                //To send a paginated menu
+                //Send a paginated menu
                 ReplyCallbackAction action = event.replyEmbeds(gymEmbeds.get(0));
                 if (gymEmbeds.size() > 1){
                     ButtonListener.sendPaginatedMenu(event.getUser().getId(), action, gymEmbeds);
@@ -49,13 +49,13 @@ public class GymCommand extends Command {
                 }
                 action.queue();
             } else{
-                event.reply(event.getUser().getAsMention() + "Unable to retrieve the live gym usages at this moment!").queue();
+                event.reply(event.getUser().getAsMention() + " Unable to retrieve the live gym usages at this moment!").queue();
             }
         }, bot.service);
     }
 
     /**
-     * To build a paginated menu
+     * To generate embeds for the paginated menu
      * @param gymInformation the ArrayList with every embed to add onto the menu
      * @return an ArrayList of all embeds in the menu
      */
