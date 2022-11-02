@@ -71,6 +71,18 @@ Example -
 
 ![Example4](https://cdn.discordapp.com/attachments/1007141650281279568/1034288672641654825/unknown.png)
 
+#### Dining Hall Command
+
+`/diningmenu <dining market> <menu type>`
+
+`e.g., <Rheta's Market> <Breakfast>, <Gordon Avenue Market> <Lunch>, <Four Lakes Market> <Dinner>`
+
+Display a dining menu consisting of every station and its food items within every category
+<br><br>
+Example -
+
+![Example5](https://media.discordapp.net/attachments/1007141650281279568/1037369558928986192/unknown.png)
+
 ## Self Hosting
 
 To get a local copy of the bot up and running for development and testing purposes, follow these instructions.
