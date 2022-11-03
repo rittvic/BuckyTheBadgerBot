@@ -393,18 +393,24 @@ public class HTTPClient {
         return gymInformation;
     }
 
+    /**
+     * Fetch a menu containing the food items of every food station at the passed in dining market
+     * @param diningMarket the dining market to fetch the menu from
+     * @param menuType the type of menu (Breakfast, Lunch, or Dinner)
+     * @return HashMap containing every food station and its sub-categories matching with all food items in the sub-category
+     */
     public HashMap<String,String> diningMenuLookup(String diningMarket, String menuType){
 
         //Get today's date
         String date = "\""+ LocalDate.now()+"\"";
 
+        //Call the API
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
                 .uri(URI.create(BASE_URL3+"/menu/api/weeks/school/"+diningMarket+"/menu-type/"+menuType+"/"
                         +date.replaceAll("-","/").replaceAll("\"","")+"/"))
                 .build();
         HttpResponse<String> response;
-
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
@@ -414,6 +420,7 @@ public class HTTPClient {
         JsonReader reader = Json.createReader(new StringReader(response.body()));
         JsonObject jsonObject = reader.readObject();
 
+        //Parse the JSON response
         try{
             //Get the total number of days in the menu week (usually 7)
             int numDays = jsonObject.asJsonObject().getJsonArray("days").size();
@@ -484,6 +491,7 @@ public class HTTPClient {
                 }
             }
             return stations;
+            //Catch any null pointer exceptions and return a null hashmap
         } catch (NullPointerException e){
             System.out.println(e.getMessage());
             e.printStackTrace();

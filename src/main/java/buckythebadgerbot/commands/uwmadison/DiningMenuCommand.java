@@ -19,7 +19,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Command that retrieves information about a professor from ratemyprofessor.com
+ * Command that retrieves information for dining menu
  * Calls from HTTPClient.java
  */
 public class DiningMenuCommand extends Command {

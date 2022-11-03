@@ -16,7 +16,7 @@ import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Command that retrieves information about a professor from ratemyprofessor.com
+ * Command that retrieves live usage for every gym equipment
  * Calls from HTTPClient.java
  */
 public class GymCommand extends Command {
