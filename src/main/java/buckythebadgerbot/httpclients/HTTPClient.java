@@ -330,40 +330,36 @@ public class HTTPClient {
      */
     public ArrayList<HashMap<String, String>> gymLookup(){
         ArrayList<HashMap<String, String>> gymInformation = new ArrayList<>();
-        String url = BASE_URL2;
 
-        HttpRequest request = HttpRequest.newBuilder().GET().timeout(Duration.ofSeconds(5)).uri(URI.create(url)).build();
+        //Make GET request
+        HttpRequest request = HttpRequest.newBuilder().GET().timeout(Duration.ofSeconds(5)).uri(URI.create(BASE_URL2)).build();
         HttpResponse<String> response;
-
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
             return null;
         }
 
+        //Parse the JSON response
         JsonReader reader = Json.createReader(new StringReader(response.body()));
-        JsonArray jsonArray = reader.readArray();
-
-        //Set up Strings to store information
-        String facilityName;
-        String locationName;
-        String currentCount;
-        String totalCapacity;
-        String lastUpdatedTime;
+        //Sort the JSON Array based on "LastCount" int value in descending order
+        List<JsonValue> descendingJsonList = reader.readArray().stream()
+                .sorted(Comparator.comparingInt( (JsonValue count) -> count.asJsonObject().getJsonNumber("LastCount").intValue())
+                        .reversed()).toList();
 
         //Set up HashMap for the two facilities
-        HashMap<String, String> nickFacility = new HashMap<>();
-        HashMap<String, String> shellFacility = new HashMap<>();
+        LinkedHashMap<String, String> nickFacility = new LinkedHashMap<>();
+        LinkedHashMap<String, String> shellFacility = new LinkedHashMap<>();
 
 
-        for (JsonValue equipment : jsonArray) {
+        //Iterate through the list of JSON values
+        for (JsonValue equipment : descendingJsonList) {
             //Store the respective information
-            facilityName = String.valueOf(equipment.asJsonObject().getJsonString("FacilityName")).replaceAll("\"", "");
-            locationName =  String.valueOf(equipment.asJsonObject().getJsonString("LocationName")).replaceAll("\"", "");
-            currentCount = String.valueOf(equipment.asJsonObject().asJsonObject().getJsonNumber("LastCount"));
-            totalCapacity = String.valueOf(equipment.asJsonObject().asJsonObject().getJsonNumber("TotalCapacity"));
-            lastUpdatedTime = null;
-
+            String facilityName = String.valueOf(equipment.asJsonObject().getJsonString("FacilityName")).replaceAll("\"", "");
+            String locationName =  String.valueOf(equipment.asJsonObject().getJsonString("LocationName")).replaceAll("\"", "");
+            String currentCount = String.valueOf(equipment.asJsonObject().asJsonObject().getJsonNumber("LastCount"));
+            String totalCapacity = String.valueOf(equipment.asJsonObject().asJsonObject().getJsonNumber("TotalCapacity"));
+            String lastUpdatedTime;
             try{
                 //Convert the standard timestamp (GMT-5) to unix timestamp (epoch)
                 Date dt = sdf.parse(String.valueOf(equipment.asJsonObject().asJsonObject().getJsonString("LastUpdatedDateAndTime")).replaceAll("\"", ""));
@@ -373,15 +369,15 @@ public class HTTPClient {
 
                 lastUpdatedTime = String.valueOf((int)(epoch/1000));
             } catch (ParseException parseException){
-                gymInformation.clear();
                 return null;
             }
+
             //Add the locations to the respective hashmap
             if (facilityName.equals("Nicholas Recreation Center")){
-                nickFacility.put(facilityName + ":" + locationName, "Usage: `" +  currentCount + "/" + totalCapacity + "`" + "\n"
+                nickFacility.put(facilityName + "|" + locationName, "Usage: `" +  currentCount + "/" + totalCapacity + "`" + "\n"
                         + "Last updated: " + "<t:" + lastUpdatedTime + ">");
             } else if (facilityName.equals("Shell")){
-                shellFacility.put(facilityName + ":" + locationName, "Usage: `" +  currentCount + "/" + totalCapacity + "`" + "\n"
+                shellFacility.put(facilityName + "|" + locationName, "Usage: `" +  currentCount + "/" + totalCapacity + "`" + "\n"
                         + "Last updated: " +  "<t:" + lastUpdatedTime + ">");
             }
         }

@@ -70,12 +70,12 @@ public class GymCommand extends Command {
             for (HashMap<String, String> entry : gymInformation){
                 //Create a new embed
                 EmbedBuilder embed = new EmbedBuilder();
-                embed.setTitle(entry.keySet().stream().findFirst().get().split(":")[0]);
+                embed.setTitle(entry.keySet().stream().findFirst().get().split("\\|")[0]);
                 embed.setColor(Color.red);
 
                 //Iterate through every pair in the HashMap
                 for (String key : entry.keySet()){
-                    embed.addField(key.split(":")[1], entry.get(key), true);
+                    embed.addField(key.split("\\|")[1], entry.get(key), true);
                 }
 
                 //Store the embed in the ArrayList
