@@ -116,6 +116,12 @@ public class DiningMenuCommand extends Command {
             while (iterator.hasNext()) {
                 //Grab the current entry
                 Map.Entry<String, String> entry = iterator.next();
+
+                //If the entry value is null, continue onto the next iteration
+                if (entry.getValue() == null){
+                    continue;
+                }
+
                 //Obtain the station in the current entry
                 String currentStation = entry.getKey().split("-0")[1];
                 //Check if it on the first entry

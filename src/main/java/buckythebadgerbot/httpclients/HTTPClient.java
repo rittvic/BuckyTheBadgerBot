@@ -461,6 +461,9 @@ public class HTTPClient {
                 if (day.getJsonArray("menu_items").get(i).asJsonObject().get("food").getValueType() != JsonValue.ValueType.NULL){
                     //Obtain station ID (menu_id) associated with the food item
                     String stationID = day.getJsonArray("menu_items").get(i).asJsonObject().getJsonNumber("menu_id").toString();
+                    //Put Entree and Side categories first
+                    stations.putIfAbsent(stationsKey.get(stationID) + "-0" + "Entree", null);
+                    stations.putIfAbsent(stationsKey.get(stationID) + "-0" + "Side", null);
                     //Obtain name of the food item
                     String foodName = day.getJsonArray("menu_items").get(i).asJsonObject().get("food").asJsonObject().getString("name");
                     //Get the category of the food (entree or side)
@@ -488,7 +491,7 @@ public class HTTPClient {
             }
             return stations;
             //Catch any null pointer exceptions and return a null hashmap
-        } catch (NullPointerException e){
+        } catch (Exception e){
             System.out.println(e.getMessage());
             e.printStackTrace();
             return null;
