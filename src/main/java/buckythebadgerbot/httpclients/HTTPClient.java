@@ -1,7 +1,11 @@
 package buckythebadgerbot.httpclients;
 
 import buckythebadgerbot.pojo.Professor;
-import javax.json.*;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonReader;
+import javax.json.JsonValue;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;
@@ -32,7 +36,7 @@ public class HTTPClient {
     //Recwell (gym) URL
     private static final String BASE_URL2 = "https://goboardapi.azurewebsites.net/api/FacilityCount/GetCountsByAccount?AccountAPIKey=7938FC89-A15C-492D-9566-12C961BC1F27";
     //Dining hall URL
-    private static final String BASE_URL3 = "https://wisc-housingdining.nutrislice.com";
+    private static final String BASE_URL3 = "https://wisc-housingdining.nutrislice.com/menu/api/weeks/school/";
 
     //The standard timestamp format
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -403,7 +407,7 @@ public class HTTPClient {
         //Call the API
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
-                .uri(URI.create(BASE_URL3+"/menu/api/weeks/school/"+diningMarket+"/menu-type/"+menuType+"/"
+                .uri(URI.create(BASE_URL3+diningMarket+"/menu-type/"+menuType+"/"
                         +date.replaceAll("-","/").replaceAll("\"","")+"/"))
                 .build();
         HttpResponse<String> response;
