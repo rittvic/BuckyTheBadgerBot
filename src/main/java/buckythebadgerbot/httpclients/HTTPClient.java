@@ -401,8 +401,8 @@ public class HTTPClient {
      */
     public HashMap<String,String> diningMenuLookup(String diningMarket, String menuType){
 
-        //Get today's date
-        String date = "\""+ LocalDate.now()+"\"";
+        //Get the current date in CST
+        String date = "\""+ LocalDate.now(TimeZone.getTimeZone("US/Central").toZoneId())+"\"";
 
         //Call the API
         HttpRequest request = HttpRequest.newBuilder()

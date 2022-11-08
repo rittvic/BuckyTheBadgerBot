@@ -131,7 +131,8 @@ public class DiningMenuCommand extends Command {
                     embed = new EmbedBuilder()
                             .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
                             .setThumbnail(thumbnail.url)
-                            .setTimestamp(Instant.now())
+                            .setFooter(LocalDateTime.now(TimeZone.getTimeZone("US/Central").toZoneId()).format(DateTimeFormatter.ofPattern("MM/dd/uuuu • h:mm a"))
+                                    + " (US Central Time)")
                             .setColor(Color.red);
 
                 //Check if the current station is not equal to the station in the previous entry (which means it's a new station)
@@ -142,7 +143,8 @@ public class DiningMenuCommand extends Command {
                     embed = new EmbedBuilder()
                             .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
                             .setThumbnail(thumbnail.url)
-                            .setTimestamp(Instant.now())
+                            .setFooter(LocalDateTime.now(TimeZone.getTimeZone("US/Central").toZoneId()).format(DateTimeFormatter.ofPattern("MM/dd/uuuu • h:mm a"))
+                                    + " (US Central Time)")
                             .setColor(Color.red);
                 }
                 //Add a new field of the food type and every food item that corresponds with the type
