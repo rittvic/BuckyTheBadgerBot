@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -130,7 +131,7 @@ public class DiningMenuCommand extends Command {
                     embed = new EmbedBuilder()
                             .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
                             .setThumbnail(thumbnail.url)
-                            .setFooter(LocalDateTime.now(TimeZone.getTimeZone("US/Central").toZoneId()).format(DateTimeFormatter.ofPattern("MM-dd-uuuu • h:mm a")))
+                            .setTimestamp(Instant.now())
                             .setColor(Color.red);
 
                 //Check if the current station is not equal to the station in the previous entry (which means it's a new station)
@@ -141,7 +142,7 @@ public class DiningMenuCommand extends Command {
                     embed = new EmbedBuilder()
                             .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
                             .setThumbnail(thumbnail.url)
-                            .setFooter(LocalDateTime.now(TimeZone.getTimeZone("US/Central").toZoneId()).format(DateTimeFormatter.ofPattern("MM-dd-uuuu • h:mm a")))
+                            .setTimestamp(Instant.now())
                             .setColor(Color.red);
                 }
                 //Add a new field of the food type and every food item that corresponds with the type
