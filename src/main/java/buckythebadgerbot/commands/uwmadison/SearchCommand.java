@@ -32,6 +32,9 @@ public class SearchCommand extends Command {
         super(bot);
         this.name = "search";
         this.description = "Queries courses and displays the top results";
+        this.explanation = """
+                `e.g., <Calculus>, <Amer Ind>, <Math 340>, <500>`\s
+                Queries through the courses and finds the best matches. It then generates buttons for each result.""";
         this.args.add(new OptionData(OptionType.STRING, "query", "Search for courses", true));
     }
 

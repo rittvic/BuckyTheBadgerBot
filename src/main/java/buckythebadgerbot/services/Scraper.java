@@ -1,4 +1,4 @@
-package buckythebadgerbot.httpclients;
+package buckythebadgerbot.services;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -18,7 +18,7 @@ import java.util.ArrayList;
  * NOTE: May choose to pre web-scrape all courses and store in a DB to significantly lower response time
  */
 public class Scraper {
-    private static final String BASE_URL = "https://guide.wisc.edu/courses/";
+    private static final String GUIDE_WISC_URL = "https://guide.wisc.edu/courses/";
 
     /**
      * A static method to scrape the course information
@@ -26,9 +26,9 @@ public class Scraper {
      * @param courseSubject the course subject (e.g., CS)
      * @return an ArrayList of the course information
      */
-    public static ArrayList<String> scrapeThis(String courseNumber, String courseSubject) {
+    public static ArrayList<String> scrapeCourse(String courseNumber, String courseSubject) {
         ArrayList<String> courseInformation = new ArrayList<>();
-        String url = BASE_URL + URLEncoder.encode(courseSubject, StandardCharsets.UTF_8);
+        String url = GUIDE_WISC_URL + URLEncoder.encode(courseSubject, StandardCharsets.UTF_8);
 
         //NOTE: Should probably check if it's necessary to add any protections to avoid inadvertently DDOSing the url host.
         Document doc;

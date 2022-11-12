@@ -1,16 +1,14 @@
 package buckythebadgerbot.listeners;
 
 import buckythebadgerbot.BuckyTheBadgerBot;
-import buckythebadgerbot.httpclients.Scraper;
+import buckythebadgerbot.services.Scraper;
 import net.dv8tion.jda.api.EmbedBuilder;
-import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
-import net.dv8tion.jda.api.requests.restaction.WebhookMessageCreateAction;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -147,7 +145,7 @@ public class ButtonListener extends ListenerAdapter {
                 courseSearch = bot.madGradesClient.courseLookUp(event.getButton().getLabel());
                 if (!courseSearch.isEmpty()) {
                     averageGPA = bot.madGradesClient.courseAverageGPA(courseSearch.get(0));
-                    courseInformation = Scraper.scrapeThis(courseSearch.get(1),courseSearch.get(3));
+                    courseInformation = Scraper.scrapeCourse(courseSearch.get(1),courseSearch.get(3));
                     if (!courseInformation.isEmpty()) {
                         EmbedBuilder eb = new EmbedBuilder()
                                 .setTitle(courseInformation.get(0))
@@ -210,10 +208,10 @@ public class ButtonListener extends ListenerAdapter {
                         }
                     }
                 } else{
-                    event.reply(event.getUser().getAsMention() + " You didn't request this!").setEphemeral(true).queue();
+                    event.reply("You didn't request this!").setEphemeral(true).queue();
                 }
             } else {
-                event.reply(event.getUser().getAsMention() + " Stop spamming! Please wait 30 seconds.").queue();
+                event.reply("Stop spamming! Please wait 30 seconds.").setEphemeral(true).queue();
             }
 
             //Clean map of expired timestamps

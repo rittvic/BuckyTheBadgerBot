@@ -1,6 +1,6 @@
 package buckythebadgerbot.commands.uwmadison;
 
-import buckythebadgerbot.httpclients.Scraper;
+import buckythebadgerbot.services.Scraper;
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -25,6 +25,16 @@ public class CourseCommand extends Command {
         super(bot);
         this.name = "course";
         this.description = "Display course information";
+        this.explanation = """
+                `e.g., <CS 577>, <Biology>, <102>, <Machine Learning>`
+                 Searches for the specified course (or the top result) and displays the following information:\s
+                 - Course Description
+                 - Cumulative GPA
+                 - Credits
+                 - Requisites
+                 - Course Designation
+                 - Repeatable For Credit
+                 - Last Taught""";
         this.args.add(new OptionData(OptionType.STRING, "course", "Course name and/or number", true));
     }
 
@@ -45,13 +55,16 @@ public class CourseCommand extends Command {
 
             //Fetches the UUID, Course Number, Course Code, Course Subject, and Course Name
             courseSearch = bot.madGradesClient.courseLookUp(courseNameAndNumber);
+            System.out.println(courseSearch);
             if (!courseSearch.isEmpty()) {
 
                 //Calculates the average GPA of the course
                 averageGPA = bot.madGradesClient.courseAverageGPA(courseSearch.get(0));
+                System.out.println(averageGPA);
 
                 //Fetches rest of the course information such as requisites, description, designations, etc
-                courseInformation = Scraper.scrapeThis(courseSearch.get(1),courseSearch.get(3));
+                courseInformation = Scraper.scrapeCourse(courseSearch.get(1),courseSearch.get(3));
+                System.out.println(courseInformation);
 
                 if (!courseInformation.isEmpty()) {
                     EmbedBuilder eb = new EmbedBuilder()

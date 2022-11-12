@@ -15,6 +15,8 @@ public abstract class Command {
     public BuckyTheBadgerBot bot;
     public String name;
     public String description;
+    public String explanation;
+
     public List<OptionData> args;
     public List<SubcommandData> subCommands;
 

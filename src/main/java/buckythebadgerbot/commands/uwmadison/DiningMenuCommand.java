@@ -2,7 +2,7 @@ package buckythebadgerbot.commands.uwmadison;
 
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
-import buckythebadgerbot.commands.utility.enums.DiningMenuImage;
+import buckythebadgerbot.utility.enums.DiningMenuImage;
 import buckythebadgerbot.listeners.ButtonListener;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
@@ -14,7 +14,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -31,6 +30,9 @@ public class DiningMenuCommand extends Command {
         super(bot);
         this.name = "diningmenu";
         this.description = "Display dining menu";
+        this.explanation = """
+                 `e.g., <Rheta's Market> <Breakfast>, <Gordon Avenue Market> <Lunch>, <Four Lakes Market> <Dinner>`\s
+                 Display a dining menu consisting of every station and its food items within every category""";
         this.args.add(new OptionData(OptionType.STRING, "dining-market", "choose a dining market", true)
                 .addChoice("Rheta's Market","rhetas-market-0Rheta's Market")
                 .addChoice("Gordon Avenue Market","gordon-avenue-market-0Gordon Avenue Market")
@@ -64,10 +66,9 @@ public class DiningMenuCommand extends Command {
             //Get the chosen menu type
             String menuType = menuTypeArg.split("-0")[0];
 
-            if (  (menuType.equals("lowell-dining-daily")) &&  !((diningMarket.equals("four-lakes-market")) || (diningMarket.equals("gordon-avenue-market")))){
-                event.reply(event.getUser().getAsMention()
-                        + " You chose an invalid option! (Cannot do " + diningMarketArg.split("-0")[1]
-                        + " - " + menuTypeArg.split("-0")[1] + ")").queue();
+            if ((menuType.equals("lowell-dining-daily")) &&  !((diningMarket.equals("four-lakes-market")) || (diningMarket.equals("gordon-avenue-market")))){
+                event.reply("`" + diningMarketArg.split("-0")[1] + " - " + menuTypeArg.split("-0")[1] +
+                        "`" + "is not a valid option (does not exist)!").setEphemeral(true).queue();
                 return;
             }
 
@@ -83,7 +84,9 @@ public class DiningMenuCommand extends Command {
                 }
                 action.queue();
             } else{
-                event.reply(event.getUser().getAsMention() + " Unable to retrieve the dining menu at this moment!").queue();
+                //event.reply(event.getUser().getAsMention() + " Unable to retrieve the dining menu at this moment!").queue();
+                event.reply("`" + diningMarketArg.split("-0")[1] + " - " + menuTypeArg.split("-0")[1] + "`" +
+                        " is not offered today!").queue();
             }
         }, bot.service);
     }
@@ -125,7 +128,7 @@ public class DiningMenuCommand extends Command {
 
                 //Obtain the station in the current entry
                 String currentStation = entry.getKey().split("-0")[1];
-                //Check if it on the first entry
+                //Check if its on the first entry
                 if (prevStation == null){
                     //Initialize embed to new EmbedBuilder object with edited title
                     embed = new EmbedBuilder()

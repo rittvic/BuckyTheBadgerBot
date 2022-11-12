@@ -1,4 +1,4 @@
-package buckythebadgerbot.httpclients;
+package buckythebadgerbot.services;
 
 import buckythebadgerbot.pojo.Professor;
 
@@ -27,16 +27,16 @@ import java.util.concurrent.TimeUnit;
  * NOTE: May decide to switch to OkHttp library for simplifications.
  * Parses JSON responses using `Jakarta JSON Processing` library
  */
-public class HTTPClient {
+public class APIHandler {
 
     //Madgrade URL
-    private static final String BASE_URL = "https://api.madgrades.com";
+    private static final String MADGRADES_URL = "https://api.madgrades.com";
     //RMP URL
-    private static final String BASE_URL1 = "https://www.ratemyprofessors.com/graphql";
+    private static final String RMP_URL = "https://www.ratemyprofessors.com/graphql";
     //Recwell (gym) URL
-    private static final String BASE_URL2 = "https://goboardapi.azurewebsites.net/api/FacilityCount/GetCountsByAccount?AccountAPIKey=7938FC89-A15C-492D-9566-12C961BC1F27";
+    private static final String RECWELL_URL = "https://goboardapi.azurewebsites.net/api/FacilityCount/GetCountsByAccount?AccountAPIKey=7938FC89-A15C-492D-9566-12C961BC1F27";
     //Dining hall URL
-    private static final String BASE_URL3 = "https://wisc-housingdining.nutrislice.com/menu/api/weeks/school/";
+    private static final String DINING_URL = "https://wisc-housingdining.nutrislice.com/menu/api/weeks/school/";
 
     //The standard timestamp format
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
@@ -48,12 +48,12 @@ public class HTTPClient {
      * Creates an instance of HTTP Client
      * @param apiKey the API token
      */
-    public HTTPClient(String apiKey) {
+    public APIHandler(String apiKey) {
         this.apiKey = apiKey;
         this.httpClient = HttpClient.newHttpClient();
     }
 
-    public HTTPClient(){
+    public APIHandler(){
         this.apiKey = null;
         this.httpClient = HttpClient.newHttpClient();
     }
@@ -66,7 +66,7 @@ public class HTTPClient {
      */
     public ArrayList<String> courseLookUp(String courseAndNumber) {
         ArrayList<String> values = new ArrayList<>();
-        String url = BASE_URL + "/v1/courses?query=" + URLEncoder.encode(courseAndNumber, StandardCharsets.UTF_8);
+        String url = MADGRADES_URL + "/v1/courses?query=" + URLEncoder.encode(courseAndNumber, StandardCharsets.UTF_8);
         HttpRequest request = HttpRequest.newBuilder().header("Authorization", "Token " + this.apiKey).GET().uri(URI.create(url)).build();
         HttpResponse<String> response;
         try {
@@ -78,17 +78,16 @@ public class HTTPClient {
         JsonReader reader = Json.createReader(new StringReader(response.body()));
         JsonObject jsonObject = reader.readObject();
         try {
-            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonString("uuid").toString().replaceAll("\"", ""));
+            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonString("uuid").getString());
             values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonNumber("number").toString());
-            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("code").toString().replaceAll("\"", ""));
+            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("code").getString());
             //replace certain characters to best match the abbreviations from madgrades with guide.wisc.edu
-            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("abbreviation").toString().
+            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("abbreviation").getString().
                     replaceAll(" ", "_").
                     replaceAll("-","_").
                     replaceAll("&_","").
-                    replaceAll("&","_").
-                    replaceAll("\"", "").toLowerCase());
-            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonString("name").toString().replaceAll("\"", ""));
+                    replaceAll("&","_").toLowerCase());
+            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonString("name").getString());
 
         } catch (RuntimeException e) {
             return values;
@@ -104,7 +103,7 @@ public class HTTPClient {
      */
     public String courseAverageGPA(String ID) {
         ArrayList<Integer> values = new ArrayList<>();
-        String url = BASE_URL + "/v1/courses/" + ID + "/grades";
+        String url = MADGRADES_URL + "/v1/courses/" + ID + "/grades";
         HttpRequest request = HttpRequest.newBuilder().header("Authorization", "Token " + this.apiKey).GET().uri(URI.create(url)).build();
         HttpResponse<String> response;
         try {
@@ -141,7 +140,7 @@ public class HTTPClient {
      */
     public ArrayList<JsonObject> courseQuery(String course) {
         ArrayList<JsonObject> results = new ArrayList<>();
-        String url = BASE_URL + "/v1/courses?query=" + URLEncoder.encode(course, StandardCharsets.UTF_8);
+        String url = MADGRADES_URL + "/v1/courses?query=" + URLEncoder.encode(course, StandardCharsets.UTF_8);
         HttpRequest request = HttpRequest.newBuilder().header("Authorization", "Token " + this.apiKey).GET().uri(URI.create(url)).build();
         HttpResponse<String> response;
         try {
@@ -177,7 +176,7 @@ public class HTTPClient {
      * @param profName the name of the professor
      * @return A Professor object with fetched information
      */
-    public Professor profInfo(String profName) {
+    public Professor profLookup(String profName) {
         HttpRequest request = HttpRequest.newBuilder()
                 .header("Authorization", "Basic " + this.apiKey)
                 .header("Content-Type", "application/json")
@@ -190,7 +189,7 @@ public class HTTPClient {
                         " ...CardName_teacher\\n  ...TeacherBookmark_teacher\\n}\\n\\nfragment CardFeedback_teacher on Teacher {\\n  wouldTakeAgainPercent\\n  avgDifficulty\\n}\\n\\nfragment CardSchool_teacher on Teacher {\\n" +
                         "  department\\n  school {\\n    name\\n    id\\n  }\\n}\\n\\nfragment CardName_teacher on Teacher {\\n  firstName\\n  lastName\\n}\\n\\nfragment TeacherBookmark_teacher on Teacher {\\n  id\\n  " +
                         "isSaved\\n}\\n\",\"variables\":{\"query\":{\"text\":\"" + profName + "\",\"schoolID\":\"U2Nob29sLTE4NDE4\",\"fallback\":true,\"departmentID\":null},\"schoolID\":\"U2Nob29sLTE4NDE4\"}}"))
-                .uri(URI.create(BASE_URL1)).build();
+                .uri(URI.create(RMP_URL)).build();
         HttpResponse<String> response;
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -263,7 +262,7 @@ public class HTTPClient {
                         "ragment RatingDistributionChart_ratingsDistribution on ratingsDistribution {\\n  r1\\n  r2\\n  r3\\n  r4\\n  r5\\n}\\n\\nfragment HeaderDescription_teacher on Teacher {\\n  id\\n  firstName\\n  lastName\\n  depar" +
                         "tment\\n  school {\\n    legacyId\\n    name\\n    id\\n  }\\n  ...TeacherTitles_teacher\\n  ...TeacherBookmark_teacher\\n}\\n\\nfragment HeaderRateButton_teacher on Teacher {\\n  ...RateTeacherLink_teacher\\n}\\" +
                         "n\\nfragment TeacherTitles_teacher on Teacher {\\n  department\\n  school {\\n    legacyId\\n    name\\n    id\\n  }\\n}\\n\",\"variables\":{\"id\":\"" + profInformation.get(1) + "\"}}"))
-                .uri(URI.create(BASE_URL1)).build();
+                .uri(URI.create(RMP_URL)).build();
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (IOException | InterruptedException e) {
@@ -336,7 +335,7 @@ public class HTTPClient {
         ArrayList<HashMap<String, String>> gymInformation = new ArrayList<>();
 
         //Make GET request
-        HttpRequest request = HttpRequest.newBuilder().GET().timeout(Duration.ofSeconds(5)).uri(URI.create(BASE_URL2)).build();
+        HttpRequest request = HttpRequest.newBuilder().GET().timeout(Duration.ofSeconds(5)).uri(URI.create(RECWELL_URL)).build();
         HttpResponse<String> response;
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -407,7 +406,7 @@ public class HTTPClient {
         //Call the API
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
-                .uri(URI.create(BASE_URL3+diningMarket+"/menu-type/"+menuType+"/"
+                .uri(URI.create(DINING_URL +diningMarket+"/menu-type/"+menuType+"/"
                         +date.replaceAll("-","/").replaceAll("\"","")+"/"))
                 .build();
         HttpResponse<String> response;

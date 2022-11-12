@@ -1,4 +1,4 @@
-package buckythebadgerbot.commands.utility.enums;
+package buckythebadgerbot.utility.enums;
 
 /**
  * Enum class to store images for every dining market

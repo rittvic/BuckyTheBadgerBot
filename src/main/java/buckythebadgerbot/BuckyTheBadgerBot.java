@@ -1,7 +1,7 @@
 package buckythebadgerbot;
 
 import buckythebadgerbot.commands.CommandManager;
-import buckythebadgerbot.httpclients.HTTPClient;
+import buckythebadgerbot.services.APIHandler;
 import buckythebadgerbot.listeners.ButtonListener;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -20,9 +20,9 @@ import java.util.concurrent.Executors;
  */
 public class BuckyTheBadgerBot {
 
-    public HTTPClient madGradesClient;
-    public HTTPClient RMPClient;
-    public HTTPClient client;
+    public APIHandler madGradesClient;
+    public APIHandler RMPClient;
+    public APIHandler client;
     public ExecutorService service;
     public final @NotNull ButtonListener buttonListener;
     public @NotNull final Dotenv config;
@@ -35,9 +35,9 @@ public class BuckyTheBadgerBot {
         String token = config.get("TOKEN");
 
         //Setup HTTP tools
-        madGradesClient = new HTTPClient(config.get("MADGRADES_TOKEN"));
-        RMPClient = new HTTPClient(config.get("RMP_TOKEN"));
-        client = new HTTPClient();
+        madGradesClient = new APIHandler(config.get("MADGRADES_TOKEN"));
+        RMPClient = new APIHandler(config.get("RMP_TOKEN"));
+        client = new APIHandler();
 
         //Setup threadpool
         //NOTE: May choose to setup a certain amount of threads in the future

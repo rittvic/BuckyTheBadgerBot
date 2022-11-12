@@ -25,6 +25,8 @@ public class GymCommand extends Command {
         super(bot);
         this.name = "gym";
         this.description = "Display live usage for every gym equipment at the Nicholas Recreation Center and the Shell";
+        this.explanation = """
+                Check live usages for gym equipments at the Nicholas Recreation Center and the Shell.""";
     }
 
     /**
@@ -36,10 +38,8 @@ public class GymCommand extends Command {
     public void execute(SlashCommandInteractionEvent event) {
         CompletableFuture.runAsync(() -> {
             logger.info("Executing {}", GymCommand.class.getSimpleName());
-
             //Create an ArrayList of embeds by calling the HTTP client's gymLookup() method
             ArrayList<MessageEmbed> gymEmbeds = buildMenu(bot.client.gymLookup());
-
             if (!gymEmbeds.isEmpty()){
                 //Send a paginated menu
                 ReplyCallbackAction action = event.replyEmbeds(gymEmbeds.get(0));
@@ -49,7 +49,7 @@ public class GymCommand extends Command {
                 }
                 action.queue();
             } else{
-                event.reply(event.getUser().getAsMention() + " Unable to retrieve the live gym usages at this moment!").queue();
+                event.reply("Unable to retrieve the live gym usages at this moment!").queue();
             }
         }, bot.service);
     }
@@ -63,15 +63,14 @@ public class GymCommand extends Command {
 
         //Create an ArrayList of embeds
         ArrayList<MessageEmbed> embeds = new ArrayList<>();
-
         if (gymInformation != null){
-
             //Iterate through every HashMap in the ArrayList of gym information
             for (HashMap<String, String> entry : gymInformation){
                 //Create a new embed
-                EmbedBuilder embed = new EmbedBuilder();
-                embed.setTitle(entry.keySet().stream().findFirst().get().split("\\|")[0]);
-                embed.setColor(Color.red);
+                EmbedBuilder embed = new EmbedBuilder()
+                        .setTitle(entry.keySet().stream().findFirst().get().split("\\|")[0])
+                        .setColor(Color.red)
+                        .setFooter("The displayed timestamps are local.");
 
                 //Iterate through every pair in the HashMap
                 for (String key : entry.keySet()){

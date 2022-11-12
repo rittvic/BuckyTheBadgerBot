@@ -23,6 +23,15 @@ public class ProfCommand extends Command {
         super(bot);
         this.name = "professor";
         this.description = "Display professor information";
+        this.explanation = """
+                 `e.g., <Hobbes>, <Boya Wen>, <Vermillion>`
+                 Searches for a professor and displays the following information:\s
+                 - Department
+                 - Average Rating
+                 - Total Ratings
+                 - Would Take Again
+                 - Top Tags
+                 - Courses Taught""";
         this.args.add(new OptionData(OptionType.STRING, "prof", "Professor name", true));
 
     }
@@ -40,7 +49,7 @@ public class ProfCommand extends Command {
             String profName = Objects.requireNonNull(event.getOption("prof")).getAsString();
 
             //Assigns the Professor instance to the results of the HTTP request
-            Professor prof = bot.RMPClient.profInfo(profName);
+            Professor prof = bot.RMPClient.profLookup(profName);
 
             if(prof.getDoesExist() && !prof.getFallback()){
                 StringBuilder topReviews = new StringBuilder();
