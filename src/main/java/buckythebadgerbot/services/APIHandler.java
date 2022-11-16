@@ -358,17 +358,17 @@ public class APIHandler {
         //Iterate through the list of JSON values
         for (JsonValue equipment : descendingJsonList) {
             //Store the respective information
-            String facilityName = String.valueOf(equipment.asJsonObject().getJsonString("FacilityName")).replaceAll("\"", "");
-            String locationName =  String.valueOf(equipment.asJsonObject().getJsonString("LocationName")).replaceAll("\"", "");
-            String currentCount = String.valueOf(equipment.asJsonObject().asJsonObject().getJsonNumber("LastCount"));
-            String totalCapacity = String.valueOf(equipment.asJsonObject().asJsonObject().getJsonNumber("TotalCapacity"));
+            String facilityName = equipment.asJsonObject().getJsonString("FacilityName").getString();
+            String locationName =  equipment.asJsonObject().getJsonString("LocationName").getString();
+            String currentCount = equipment.asJsonObject().asJsonObject().getJsonNumber("LastCount").toString();
+            String totalCapacity = equipment.asJsonObject().asJsonObject().getJsonNumber("TotalCapacity").toString();
             String lastUpdatedTime;
             try{
                 //Convert the standard timestamp (GMT-5) to unix timestamp (epoch)
-                Date dt = sdf.parse(String.valueOf(equipment.asJsonObject().asJsonObject().getJsonString("LastUpdatedDateAndTime")).replaceAll("\"", ""));
+                Date dt = sdf.parse(equipment.asJsonObject().asJsonObject().getJsonString("LastUpdatedDateAndTime").getString());
 
-                //We have to add five hours since the prod bot treats it as GMT-10
-                long epoch = dt.getTime() + TimeUnit.HOURS.toMillis(5);
+                //We have to add six hours since the prod bot is not based in UTC-5
+                long epoch = dt.getTime() + TimeUnit.HOURS.toMillis(6);
 
                 lastUpdatedTime = String.valueOf((int)(epoch/1000));
             } catch (ParseException parseException){
@@ -378,10 +378,10 @@ public class APIHandler {
             //Add the locations to the respective hashmap
             if (facilityName.equals("Nicholas Recreation Center")){
                 nickFacility.put(facilityName + "|" + locationName, "Usage: `" +  currentCount + "/" + totalCapacity + "`" + "\n"
-                        + "Last updated: " + "<t:" + lastUpdatedTime + ">");
+                        + "Last updated " + "<t:" + lastUpdatedTime + ":R>");
             } else if (facilityName.equals("Shell")){
                 shellFacility.put(facilityName + "|" + locationName, "Usage: `" +  currentCount + "/" + totalCapacity + "`" + "\n"
-                        + "Last updated: " +  "<t:" + lastUpdatedTime + ">");
+                        + "Last updated " +  "<t:" + lastUpdatedTime + ":R>");
             }
         }
 

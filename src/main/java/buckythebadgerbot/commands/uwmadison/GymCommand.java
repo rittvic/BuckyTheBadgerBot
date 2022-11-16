@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
@@ -70,7 +71,7 @@ public class GymCommand extends Command {
                 EmbedBuilder embed = new EmbedBuilder()
                         .setTitle(entry.keySet().stream().findFirst().get().split("\\|")[0])
                         .setColor(Color.red)
-                        .setFooter("The displayed timestamps are local.");
+                        .setTimestamp(Instant.now());
 
                 //Iterate through every pair in the HashMap
                 for (String key : entry.keySet()){
