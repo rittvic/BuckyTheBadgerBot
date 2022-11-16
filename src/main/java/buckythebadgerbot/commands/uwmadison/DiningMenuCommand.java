@@ -126,10 +126,12 @@ public class DiningMenuCommand extends Command {
                     continue;
                 }
 
-                //Obtain the station in the current entry
                 String currentStation = entry.getKey().split("-0")[1];
-                //Check if its on the first entry
-                if (prevStation == null){
+
+                if (!currentStation.equals(prevStation)){
+                    if (prevStation != null){
+                        embeds.add(embed.build());
+                    }
                     //Initialize embed to new EmbedBuilder object with edited title
                     embed = new EmbedBuilder()
                             .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
@@ -138,17 +140,6 @@ public class DiningMenuCommand extends Command {
                                     + " (US Central Time)")
                             .setColor(Color.red);
 
-                //Check if the current station is not equal to the station in the previous entry (which means it's a new station)
-                } else if (!currentStation.equals(prevStation)){
-                    //Build the previous embed and add to the ArrayList before initializing the embed to a new EmbedBuilder
-                    embeds.add(embed.build());
-                    //Initialize embed to new EmbedBuilder object with edited title
-                    embed = new EmbedBuilder()
-                            .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
-                            .setThumbnail(thumbnail.url)
-                            .setFooter(LocalDateTime.now(TimeZone.getTimeZone("US/Central").toZoneId()).format(DateTimeFormatter.ofPattern("MM/dd/uuuu • h:mm a"))
-                                    + " (US Central Time)")
-                            .setColor(Color.red);
                 }
                 //Add a new field of the food type and every food item that corresponds with the type
                 embed.addField(entry.getKey().split("-0")[2],entry.getValue(),false);
