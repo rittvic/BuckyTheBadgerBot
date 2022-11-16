@@ -70,11 +70,11 @@ public class CourseCommand extends Command {
                     EmbedBuilder eb = new EmbedBuilder()
                             .setTitle(courseInformation.get(0))
                             .setColor(Color.RED)
-                            .setDescription((courseInformation.get(2).replaceAll("replace", " ")))
+                            .setDescription(courseInformation.get(2))
                             .addField("Cumulative GPA", String.valueOf(averageGPA), false)
                             .addField("Credits", courseInformation.get(1), false)
                             .addField("Requisites", courseInformation.get(3), false)
-                            .addField("Course Designation", courseInformation.get(4).replaceAll("replace", "\n"), false)
+                            .addField("Course Designation", courseInformation.get(4), false)
                             .addField("Repeatable For Credit", courseInformation.get(5), false)
                             .addField("Last Taught", courseInformation.get(6), false);
                     long endTime = System.nanoTime();

@@ -47,16 +47,16 @@ public class Scraper {
                         //Course Credits
                         courseInformation.add(e.select("p.courseblockcredits").text());
                         //Course Description
-                        courseInformation.add(e.select("p.courseblockdesc").text());
+                        courseInformation.add(e.select("p.courseblockdesc").text().replace("replace",""));
                         if (((e.select("div.cb-extras").select("p.courseblockextra").select("span.cbextra-data")).size() == 4)) {
                             for (int i = 0; i < 4; i++) {
-                                courseInformation.add(e.select("div.cb-extras").select("p.courseblockextra").select("span.cbextra-data").get(i).text());
+                                courseInformation.add(e.select("div.cb-extras").select("p.courseblockextra").select("span.cbextra-data").get(i).text().replace("replace","\n"));
                             }
                         } else {
                             //Requisites:
                             courseInformation.add(e.select("div.cb-extras").select("p.courseblockextra").select("span.cbextra-data").get(0).text());
                             //Course Designation:
-                            courseInformation.add("None replace");
+                            courseInformation.add("None");
                             //Repeatable for Credit:
                             courseInformation.add(e.select("div.cb-extras").select("p.courseblockextra").select("span.cbextra-data").get(1).text());
                             //Last Taught:

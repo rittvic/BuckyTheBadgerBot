@@ -22,7 +22,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A dedicated HTTP Client class to handle all HTTP requests for the bot
+ * A dedicated API Handler class to handle all HTTP requests for the bot
  * Uses the built-in java.net.http HttpClient.
  * NOTE: May decide to switch to OkHttp library for simplifications.
  * Parses JSON responses using `Jakarta JSON Processing` library
