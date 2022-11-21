@@ -342,7 +342,6 @@ public class APIHandler {
         } catch (IOException | InterruptedException e) {
             return null;
         }
-
         //Parse the JSON response
         JsonReader reader = Json.createReader(new StringReader(response.body()));
         //Sort the JSON Array based on "LastCount" int value in descending order
@@ -353,7 +352,6 @@ public class APIHandler {
         //Set up HashMap for the two facilities
         LinkedHashMap<String, String> nickFacility = new LinkedHashMap<>();
         LinkedHashMap<String, String> shellFacility = new LinkedHashMap<>();
-
 
         //Iterate through the list of JSON values
         for (JsonValue equipment : descendingJsonList) {

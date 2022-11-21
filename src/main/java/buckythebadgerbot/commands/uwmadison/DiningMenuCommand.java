@@ -88,7 +88,6 @@ public class DiningMenuCommand extends Command {
                 }
                 action.queue();
             } else{
-                //event.reply(event.getUser().getAsMention() + " Unable to retrieve the dining menu at this moment!").queue();
                 event.reply("`" + diningMarketArg.split("-0")[1] + " - " + menuTypeArg.split("-0")[1] + "`" +
                         " is not offered today!").queue();
             }

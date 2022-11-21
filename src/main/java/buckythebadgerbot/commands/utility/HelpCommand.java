@@ -17,7 +17,7 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * Command that sends a help menu consisting information of all slash commands
- * NOTE: May choose to automate fetching all slash commands instead of hard-coding in the embed.
+ * Uses the explanation instance field from slash commands to automate
  */
 public class HelpCommand extends Command {
     private static final Logger logger = LoggerFactory.getLogger(HelpCommand.class);
