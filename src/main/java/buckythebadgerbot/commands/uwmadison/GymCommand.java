@@ -39,8 +39,14 @@ public class GymCommand extends Command {
     public void execute(SlashCommandInteractionEvent event) {
         CompletableFuture.runAsync(() -> {
             logger.info("Executing {}", GymCommand.class.getSimpleName());
+
             //Create an ArrayList of embeds by calling the HTTP client's gymLookup() method
-            ArrayList<MessageEmbed> gymEmbeds = buildMenu(bot.client.gymLookup());
+            long startTime = System.nanoTime();
+            ArrayList<HashMap<String,String>> gymInformation = bot.client.gymLookup();
+            long endTime = System.nanoTime();
+            long duration = (endTime - startTime) / 1000000;
+
+            ArrayList<MessageEmbed> gymEmbeds = buildMenu(gymInformation, duration);
             if (!gymEmbeds.isEmpty()){
                 //Send a paginated menu
                 ReplyCallbackAction action = event.replyEmbeds(gymEmbeds.get(0));
@@ -60,7 +66,7 @@ public class GymCommand extends Command {
      * @param gymInformation the ArrayList with every embed to add onto the menu
      * @return an ArrayList of all embeds in the menu
      */
-    private ArrayList<MessageEmbed> buildMenu(ArrayList<HashMap<String, String>> gymInformation){
+    private ArrayList<MessageEmbed> buildMenu(ArrayList<HashMap<String, String>> gymInformation, long duration){
 
         //Create an ArrayList of embeds
         ArrayList<MessageEmbed> embeds = new ArrayList<>();
@@ -71,6 +77,7 @@ public class GymCommand extends Command {
                 EmbedBuilder embed = new EmbedBuilder()
                         .setTitle(entry.keySet().stream().findFirst().get().split("\\|")[0])
                         .setColor(Color.red)
+                        .setFooter("This took " + duration + " ms to respond")
                         .setTimestamp(Instant.now());
 
                 //Iterate through every pair in the HashMap

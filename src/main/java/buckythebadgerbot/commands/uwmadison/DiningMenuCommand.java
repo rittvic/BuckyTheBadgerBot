@@ -72,8 +72,12 @@ public class DiningMenuCommand extends Command {
                 return;
             }
 
+            long startTime = System.nanoTime();
+            HashMap<String,String> stations = bot.client.diningMenuLookup(diningMarket,menuType);
+            long endTime = System.nanoTime();
+            long duration = (endTime - startTime) / 1000000;
             //Get embeds in pagination menu
-            ArrayList<MessageEmbed> diningMenuEmbeds = buildMenu(bot.client.diningMenuLookup(diningMarket,menuType),diningMarketArg.split("-0")[1], menuTypeArg.split("-0")[1]);
+            ArrayList<MessageEmbed> diningMenuEmbeds = buildMenu(stations,diningMarketArg.split("-0")[1], menuTypeArg.split("-0")[1],duration);
 
             if (!diningMenuEmbeds.isEmpty()){
                 //Send a paginated menu
@@ -99,7 +103,7 @@ public class DiningMenuCommand extends Command {
      * @param menuType the chosen menu type from choice argument
      * @return an ArrayList of all embeds in the pagination menu
      */
-    private ArrayList<MessageEmbed> buildMenu(HashMap<String,String> stations, String diningMarket, String menuType){
+    private ArrayList<MessageEmbed> buildMenu(HashMap<String,String> stations, String diningMarket, String menuType, long duration){
 
        //Set the image thumbnail of the chosen dining market
         DiningMenuImage thumbnail =  DiningMenuImage.valueOf(diningMarket.substring(0,2).toUpperCase());;
@@ -137,7 +141,7 @@ public class DiningMenuCommand extends Command {
                             .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
                             .setThumbnail(thumbnail.url)
                             .setFooter(LocalDateTime.now(TimeZone.getTimeZone("US/Central").toZoneId()).format(DateTimeFormatter.ofPattern("MM/dd/uuuu • h:mm a"))
-                                    + " (US Central Time)")
+                                    + " (US Central Time)" + "\n" + "This took " + duration + " ms to respond.")
                             .setColor(Color.red);
 
                 }
