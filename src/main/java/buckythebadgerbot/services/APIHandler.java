@@ -1,20 +1,18 @@
 package buckythebadgerbot.services;
 
 import buckythebadgerbot.pojo.Professor;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonReader;
-import javax.json.JsonValue;
 import java.io.IOException;
-import java.io.StringReader;
 import java.net.URI;
 import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -53,7 +51,7 @@ public class APIHandler {
         this.httpClient = HttpClient.newHttpClient();
     }
 
-    public APIHandler(){
+    public APIHandler() {
         this.apiKey = null;
         this.httpClient = HttpClient.newHttpClient();
     }
@@ -68,27 +66,30 @@ public class APIHandler {
         ArrayList<String> values = new ArrayList<>();
         String url = MADGRADES_URL + "/v1/courses?query=" + URLEncoder.encode(courseAndNumber, StandardCharsets.UTF_8);
         HttpRequest request = HttpRequest.newBuilder().header("Authorization", "Token " + this.apiKey).GET().uri(URI.create(url)).build();
+
         HttpResponse<String> response;
+        ObjectMapper objectMapper;
+        JsonNode jsonNode;
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            objectMapper = new ObjectMapper();
+            jsonNode = objectMapper.readTree(response.body());
         } catch (IOException | InterruptedException e) {
             System.out.println(values);
             return values;
         }
-        JsonReader reader = Json.createReader(new StringReader(response.body()));
-        JsonObject jsonObject = reader.readObject();
-        try {
-            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonString("uuid").getString());
-            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonNumber("number").toString());
-            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("code").getString());
-            //replace certain characters to best match the abbreviations from madgrades with guide.wisc.edu
-            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonArray("subjects").getJsonObject(0).getJsonString("abbreviation").getString().
-                    replaceAll(" ", "_").
-                    replaceAll("-","_").
-                    replaceAll("&_","").
-                    replaceAll("&","_").toLowerCase());
-            values.add(jsonObject.asJsonObject().getJsonArray("results").getJsonObject(0).getJsonString("name").getString());
 
+        try {
+            values.add(jsonNode.withArray("results").get(0).get("uuid").asText());
+            values.add(jsonNode.withArray("results").get(0).get("number").asText());
+            values.add(jsonNode.withArray("results").get(0).withArray("subjects").get(0).get("code").asText());
+            //replace certain characters to best match the abbreviations from madgrades with guide.wisc.edu
+            values.add(jsonNode.withArray("results").get(0).withArray("subjects").get(0).get("abbreviation").asText()
+                    .replaceAll(" ", "_")
+                    .replaceAll("-", "_")
+                    .replaceAll("&_", "")
+                    .replaceAll("&", "_").toLowerCase());
+            values.add(jsonNode.withArray("results").get(0).get("name").asText());
         } catch (RuntimeException e) {
             return values;
         }
@@ -105,23 +106,30 @@ public class APIHandler {
         ArrayList<Integer> values = new ArrayList<>();
         String url = MADGRADES_URL + "/v1/courses/" + ID + "/grades";
         HttpRequest request = HttpRequest.newBuilder().header("Authorization", "Token " + this.apiKey).GET().uri(URI.create(url)).build();
+
         HttpResponse<String> response;
+        ObjectMapper objectMapper;
+        JsonNode jsonNode;
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            objectMapper = new ObjectMapper();
+            jsonNode = objectMapper.readTree(response.body());
         } catch (IOException | InterruptedException e) {
             return String.valueOf(values);
         }
-        JsonReader reader = Json.createReader(new StringReader(response.body()));
-        JsonObject jsonObject = reader.readObject();
 
         //Parse through the JSON for the number of A,AB,B,BC,C,D,F grade points
-        values.add(jsonObject.asJsonObject().getJsonObject("cumulative").getJsonNumber("aCount").intValue());
-        values.add(jsonObject.asJsonObject().getJsonObject("cumulative").getJsonNumber("abCount").intValue());
-        values.add(jsonObject.asJsonObject().getJsonObject("cumulative").getJsonNumber("bCount").intValue());
-        values.add(jsonObject.asJsonObject().getJsonObject("cumulative").getJsonNumber("bcCount").intValue());
-        values.add(jsonObject.asJsonObject().getJsonObject("cumulative").getJsonNumber("cCount").intValue());
-        values.add(jsonObject.asJsonObject().getJsonObject("cumulative").getJsonNumber("dCount").intValue());
-        values.add(jsonObject.asJsonObject().getJsonObject("cumulative").getJsonNumber("fCount").intValue());
+        try {
+            values.add(jsonNode.get("cumulative").get("aCount").asInt());
+            values.add(jsonNode.get("cumulative").get("abCount").asInt());
+            values.add(jsonNode.get("cumulative").get("bCount").asInt());
+            values.add(jsonNode.get("cumulative").get("bcCount").asInt());
+            values.add(jsonNode.get("cumulative").get("cCount").asInt());
+            values.add(jsonNode.get("cumulative").get("dCount").asInt());
+            values.add(jsonNode.get("cumulative").get("fCount").asInt());
+        } catch (Exception e) {
+            return String.valueOf(values);
+        }
 
         //Calculate cumulative GPA
         int totalCount = 0;
@@ -138,34 +146,36 @@ public class APIHandler {
      * @param course the course to query through
      * @return an ArrayList of JsonObjects that contain the results' course name, number, and subject
      */
-    public ArrayList<JsonObject> courseQuery(String course) {
-        ArrayList<JsonObject> results = new ArrayList<>();
+    public List<JsonNode> courseQuery(String course) {
         String url = MADGRADES_URL + "/v1/courses?query=" + URLEncoder.encode(course, StandardCharsets.UTF_8);
         HttpRequest request = HttpRequest.newBuilder().header("Authorization", "Token " + this.apiKey).GET().uri(URI.create(url)).build();
+
         HttpResponse<String> response;
+        ObjectMapper objectMapper;
+        ArrayNode results;
+        ArrayList<JsonNode> courseResults = new ArrayList<>();
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            objectMapper = new ObjectMapper();
+            results = objectMapper.readTree(response.body()).withArray("results");
         } catch (InterruptedException | IOException e) {
-            return results;
+            return courseResults;
         }
-        JsonReader reader = Json.createReader(new StringReader(response.body()));
-        JsonObject jsonObject = reader.readObject();
 
-        int numResults = jsonObject.asJsonObject().getJsonArray("results").size();
-
-        //If total number of results exceeds ten, fetch only top ten results. Else fetch all the results.
-        if (numResults >= 10) {
-            for (int i = 0; i < 10; i++) {
-                results.add(jsonObject.asJsonObject().getJsonArray("results").get(i).asJsonObject());
+        //If there are more than 10 total results, only add the first 10. Otherwise, add all results.
+        if (results.size() >= 10){
+            for (int i = 0; i < 10; i++){
+                courseResults.add(results.get(i));
             }
-        } else if (numResults == 0) {
-            return results;
+        } else if (results.size() == 0){
+            return courseResults;
         } else {
-            for (int i = 0; i < (numResults); i++) {
-                results.add(jsonObject.asJsonObject().getJsonArray("results").get(i).asJsonObject());
+            for (int i = 0; i < results.size(); i++){
+                courseResults.add(results.get(i));
             }
         }
-        return results;
+
+        return courseResults;
     }
 
     /**
@@ -191,37 +201,32 @@ public class APIHandler {
                         "isSaved\\n}\\n\",\"variables\":{\"query\":{\"text\":\"" + profName + "\",\"schoolID\":\"U2Nob29sLTE4NDE4\",\"fallback\":true,\"departmentID\":null},\"schoolID\":\"U2Nob29sLTE4NDE4\"}}"))
                 .uri(URI.create(RMP_URL)).build();
         HttpResponse<String> response;
+        ObjectMapper objectMapper;
+        JsonNode jsonNode;
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            objectMapper = new ObjectMapper();
+            jsonNode = objectMapper.readTree(response.body());
         } catch (IOException | InterruptedException e) {
             return new Professor(false);
         }
         ArrayList<String> profInformation = new ArrayList<>();
-        JsonReader reader = Json.createReader(new StringReader(response.body()));
-        JsonObject jsonObject = reader.readObject();
-
-        //Pick the first UW-Madison professor that shows up in the results. If none are there, it is set to the very first result (also by default).
-        int numProfs = jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").size();
-        int node = 0;
-        for (int i = 0; i < numProfs; i++){
-            String school = jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(i).
-                    getJsonObject("node").getJsonObject("school").getJsonString("name").toString().replace("\"", "");
-            if (school.equalsIgnoreCase("University of Wisconsin - Madison")){
-                node = i;
-            }
-        }
-
-        //Check to see if the professor exists. If it does, then fetch the id, legacy id and wouldTakeAgainPercent
         try {
-            profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(node).
-                    getJsonObject("node").getJsonObject("school").getJsonString("name").toString().replace("\"", ""));
-            profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(node).
-                    getJsonObject("node").getJsonString("id").toString().replace("\"", ""));
-            profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(node).
-                    getJsonObject("node").getJsonNumber("legacyId").toString().replace("\"", ""));
-            profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("search").getJsonObject("teachers").getJsonArray("edges").getJsonObject(node).
-                    getJsonObject("node").getJsonNumber("wouldTakeAgainPercent").toString());
-        } catch (IndexOutOfBoundsException e) {
+            //Pick the first UW-Madison professor that shows up in the results. If none are there, it is set to the very first result (also by default).
+            int numResults = jsonNode.get("data").get("search").get("teachers").withArray("edges").size();
+            int node = 0;
+            for (int i = 0; i < numResults; i++) {
+                String school = jsonNode.get("data").get("search").get("teachers").withArray("edges").get(i).get("node").get("school").get("name").asText();
+                if (school.equalsIgnoreCase("University of Wisconsin - Madison")) {
+                    node = i;
+                }
+            }
+            //Check to see if the professor exists. If it does, then fetch the id, legacy id and wouldTakeAgainPercent
+            profInformation.add(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("school").get("name").asText());
+            profInformation.add(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("id").asText());
+            profInformation.add(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("legacyId").asText());
+            profInformation.add(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("wouldTakeAgainPercent").asText());
+        } catch (NullPointerException e) {
             return new Professor(false);
         }
 
@@ -263,64 +268,59 @@ public class APIHandler {
                         "tment\\n  school {\\n    legacyId\\n    name\\n    id\\n  }\\n  ...TeacherTitles_teacher\\n  ...TeacherBookmark_teacher\\n}\\n\\nfragment HeaderRateButton_teacher on Teacher {\\n  ...RateTeacherLink_teacher\\n}\\" +
                         "n\\nfragment TeacherTitles_teacher on Teacher {\\n  department\\n  school {\\n    legacyId\\n    name\\n    id\\n  }\\n}\\n\",\"variables\":{\"id\":\"" + profInformation.get(1) + "\"}}"))
                 .uri(URI.create(RMP_URL)).build();
+
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            jsonNode = objectMapper.readTree(response.body());
         } catch (IOException | InterruptedException e) {
             return new Professor(false);
         }
-        reader = Json.createReader(new StringReader(response.body()));
-        jsonObject = reader.readObject();
-
-        //Fetch the basic information of the professor
-        profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonNumber("avgRating").toString());
-        profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonNumber("avgDifficulty").toString());
-        profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonNumber("numRatings").toString());
-        profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonString("firstName").toString().replace("\"", ""));
-        profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonString("lastName").toString().replace("\"", ""));
-        profInformation.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonString("department").toString().replace("\"", ""));
-
-        //Fetch the top five reviews (or all if the total reviews is less than five) of the professor and store it in a List
-        ArrayList<JsonObject> profReviews = new ArrayList<>();
-        int numReviews = jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonArray("teacherRatingTags").size();
-        for (int i = 0; i < (numReviews); i++) {
-            profReviews.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonArray("teacherRatingTags").getJsonObject(i));
-        }
 
         List<String> topFiveReviews;
-        if (numReviews >= 5) {
-            topFiveReviews = profReviews.stream()
-                    .sorted(Comparator.comparingInt((JsonObject obj) -> obj.getInt("tagCount")).reversed())
-                    .map((JsonObject obj) -> obj.getString("tagName")).toList().subList(0, 5);
-        } else {
-            topFiveReviews = profReviews.stream()
-                    .sorted(Comparator.comparingInt((JsonObject obj) -> obj.getInt("tagCount")).reversed())
-                    .map((JsonObject obj) -> obj.getString("tagName")).toList();
-        }
-
-        //Fetch the courses taught by the professor and store it in a List
-        ArrayList<JsonObject> profCourses = new ArrayList<>();
-        int numCourses = jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonArray("courseCodes").size();
-        for(int i = 0; i < (numCourses); i++){
-            profCourses.add(jsonObject.asJsonObject().getJsonObject("data").getJsonObject("node").getJsonArray("courseCodes").getJsonObject(i));
-        }
-
         List<String> sortedProfCourses;
-        if(numCourses >= 10){
-            sortedProfCourses = profCourses.stream()
-                    .sorted(Comparator.comparingInt((JsonObject obj) -> obj.getInt("courseCount")).reversed())
-                    .map((JsonObject obj) -> obj.getString("courseName")).toList().subList(0,10);
-        } else{
-            sortedProfCourses = profCourses.stream()
-                    .sorted(Comparator.comparingInt((JsonObject obj) -> obj.getInt("courseCount")).reversed())
-                    .map((JsonObject obj) -> obj.getString("courseName")).toList();
-        }
+        try {
+            //Fetch the basic information of the professor
+            profInformation.add(jsonNode.get("data").get("node").get("avgRating").asText());
+            profInformation.add(jsonNode.get("data").get("node").get("avgDifficulty").asText());
+            profInformation.add(jsonNode.get("data").get("node").get("numRatings").asText());
+            profInformation.add(jsonNode.get("data").get("node").get("firstName").asText());
+            profInformation.add(jsonNode.get("data").get("node").get("lastName").asText());
+            profInformation.add(jsonNode.get("data").get("node").get("department").asText());
 
+            //Fetch the top five reviews (or all if the total reviews is less than five) of the professor and store it in a List
+            ArrayNode teacherRatingTags = jsonNode.get("data").get("node").withArray("teacherRatingTags");
+            ArrayList<JsonNode> profReviews = new ArrayList<>();
+            for (JsonNode ratingTag : teacherRatingTags) {
+                profReviews.add(ratingTag);
+            }
+            topFiveReviews = profReviews.stream()
+                    .sorted(Comparator.comparingInt((JsonNode obj) -> obj.get("tagCount").asInt()).reversed())
+                    .map((JsonNode obj) -> obj.get("tagName").asText()).toList();
+            if (topFiveReviews.size() >= 5) {
+                topFiveReviews = topFiveReviews.subList(0, 5);
+            }
+
+            //Fetch the courses taught by the professor and store it in a List
+            ArrayNode teacherCourses = jsonNode.get("data").get("node").withArray("courseCodes");
+            ArrayList<JsonNode> profCourses = new ArrayList<>();
+            for (JsonNode courseTaught : teacherCourses) {
+                profCourses.add(courseTaught);
+            }
+            sortedProfCourses = profCourses.stream()
+                    .sorted(Comparator.comparingInt((JsonNode obj) -> obj.get("courseCount").asInt()).reversed())
+                    .map((JsonNode obj) -> obj.get("courseName").asText()).toList();
+            if (sortedProfCourses.size() >= 10) {
+                sortedProfCourses = sortedProfCourses.subList(0, 10);
+            }
+        } catch (Exception e) {
+            return new Professor(false);
+        }
 
         //If the professor exists, but doesn't teach at UW-Madison, returns the Professor object saying so
-        if(!profInformation.get(0).equalsIgnoreCase("University of Wisconsin - Madison")){
+        if (!profInformation.get(0).equalsIgnoreCase("University of Wisconsin - Madison")) {
             return new Professor(true, true, profInformation.get(7), profInformation.get(8));
 
-        //Return Professor object with the all the fetched information
+            //Return Professor object with the all the fetched information
         } else {
             return new Professor(true, profInformation.get(1), profInformation.get(2), Double.parseDouble(profInformation.get(3)), Double.parseDouble(profInformation.get(4)), Double.parseDouble(profInformation.get(5)),
                     Integer.parseInt(profInformation.get(6)), profInformation.get(7), profInformation.get(8), profInformation.get(9), topFiveReviews, sortedProfCourses);
@@ -331,62 +331,56 @@ public class APIHandler {
      * Fetch live usage of every gym facility/location
      * @return An ArrayList of HashMaps for every main facility
      */
-    public ArrayList<HashMap<String, String>> gymLookup(){
-        ArrayList<HashMap<String, String>> gymInformation = new ArrayList<>();
-
-        //Make GET request
+    public ArrayList<HashMap<String, String>> gymLookup() {
         HttpRequest request = HttpRequest.newBuilder().GET().timeout(Duration.ofSeconds(5)).uri(URI.create(RECWELL_URL)).build();
         HttpResponse<String> response;
+        ObjectMapper objectMapper;
+        List<JsonNode> gymEquipments;
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            objectMapper = new ObjectMapper();
+            gymEquipments = objectMapper.readValue(response.body(), new TypeReference<>() {});
         } catch (IOException | InterruptedException e) {
             return null;
         }
-        //Parse the JSON response
-        JsonReader reader = Json.createReader(new StringReader(response.body()));
-        //Sort the JSON Array based on "LastCount" int value in descending order
-        List<JsonValue> descendingJsonList = reader.readArray().stream()
-                .sorted(Comparator.comparingInt( (JsonValue count) -> count.asJsonObject().getJsonNumber("LastCount").intValue())
-                        .reversed()).toList();
+        ArrayList<HashMap<String, String>> gymInformation = new ArrayList<>();
+        try {
+            //Sort the equipments based on "LastCount" value in descending order
+            gymEquipments = gymEquipments.stream().sorted(Comparator.comparingInt((JsonNode obj) -> obj.get("LastCount").asInt()).reversed()).toList();
 
-        //Set up HashMap for the two facilities
-        LinkedHashMap<String, String> nickFacility = new LinkedHashMap<>();
-        LinkedHashMap<String, String> shellFacility = new LinkedHashMap<>();
+            //Set up HashMaps for the two facilities
+            LinkedHashMap<String, String> nickFacility = new LinkedHashMap<>();
+            LinkedHashMap<String, String> shellFacility = new LinkedHashMap<>();
 
-        //Iterate through the list of JSON values
-        for (JsonValue equipment : descendingJsonList) {
-            //Store the respective information
-            String facilityName = equipment.asJsonObject().getJsonString("FacilityName").getString();
-            String locationName =  equipment.asJsonObject().getJsonString("LocationName").getString();
-            String currentCount = equipment.asJsonObject().asJsonObject().getJsonNumber("LastCount").toString();
-            String totalCapacity = equipment.asJsonObject().asJsonObject().getJsonNumber("TotalCapacity").toString();
-            String lastUpdatedTime;
-            try{
+            //Iterate through the list and store the respective information
+            for (JsonNode equipment : gymEquipments) {
+                String facilityName = equipment.get("FacilityName").asText();
+                String locationName = equipment.get("LocationName").asText();
+                String currentCount = equipment.get("LastCount").asText();
+                String totalCapacity = equipment.get("TotalCapacity").asText();
+                String lastUpdatedTime;
+
                 //Convert the standard timestamp (GMT-5) to unix timestamp (epoch)
-                Date dt = sdf.parse(equipment.asJsonObject().asJsonObject().getJsonString("LastUpdatedDateAndTime").getString());
-
+                Date dt = sdf.parse(equipment.get("LastUpdatedDateAndTime").asText());
                 //We have to add six hours since the prod bot is not based in UTC-5
                 long epoch = dt.getTime() + TimeUnit.HOURS.toMillis(6);
+                lastUpdatedTime = String.valueOf((int) (epoch / 1000));
 
-                lastUpdatedTime = String.valueOf((int)(epoch/1000));
-            } catch (ParseException parseException){
-                return null;
+                //Add the locations to the respective hashmap
+                if (facilityName.equals("Nicholas Recreation Center")) {
+                    nickFacility.put(facilityName + "|" + locationName, "Usage: `" + currentCount + "/" + totalCapacity + "`" + "\n"
+                            + "Last updated " + "<t:" + lastUpdatedTime + ":R>");
+                } else if (facilityName.equals("Shell")) {
+                    shellFacility.put(facilityName + "|" + locationName, "Usage: `" + currentCount + "/" + totalCapacity + "`" + "\n"
+                            + "Last updated " + "<t:" + lastUpdatedTime + ":R>");
+                }
             }
 
-            //Add the locations to the respective hashmap
-            if (facilityName.equals("Nicholas Recreation Center")){
-                nickFacility.put(facilityName + "|" + locationName, "Usage: `" +  currentCount + "/" + totalCapacity + "`" + "\n"
-                        + "Last updated " + "<t:" + lastUpdatedTime + ":R>");
-            } else if (facilityName.equals("Shell")){
-                shellFacility.put(facilityName + "|" + locationName, "Usage: `" +  currentCount + "/" + totalCapacity + "`" + "\n"
-                        + "Last updated " +  "<t:" + lastUpdatedTime + ":R>");
-            }
+            gymInformation.add(nickFacility);
+            gymInformation.add(shellFacility);
+        } catch (Exception e) {
+            return null;
         }
-
-        //add every hashmap to the ArrayList
-        gymInformation.add(nickFacility);
-        gymInformation.add(shellFacility);
-
         return gymInformation;
     }
 
@@ -399,100 +393,78 @@ public class APIHandler {
     public HashMap<String,String> diningMenuLookup(String diningMarket, String menuType){
 
         //Get the current date in CST
-        String date = "\""+ LocalDate.now(TimeZone.getTimeZone("US/Central").toZoneId())+"\"";
+        String date = "\"" + LocalDate.now(TimeZone.getTimeZone("US/Central").toZoneId()) + "\"";
 
         //Call the API
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
-                .uri(URI.create(DINING_URL +diningMarket+"/menu-type/"+menuType+"/"
-                        +date.replaceAll("-","/").replaceAll("\"","")+"/"))
+                .uri(URI.create(DINING_URL + diningMarket + "/menu-type/" + menuType + "/"
+                        + date.replaceAll("-", "/").replaceAll("\"", "") + "/"))
                 .build();
         HttpResponse<String> response;
+        ObjectMapper objectMapper;
+        JsonNode jsonNode;
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            objectMapper = new ObjectMapper();
+            jsonNode = objectMapper.readTree(response.body());
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
             return null;
         }
-        JsonReader reader = Json.createReader(new StringReader(response.body()));
-        JsonObject jsonObject = reader.readObject();
 
-        //Parse the JSON response
-        try{
-            //Get the total number of days in the menu week (usually 7)
-            int numDays = jsonObject.asJsonObject().getJsonArray("days").size();
-
-            //Declare JsonObject day
-            JsonObject day = null;
-            //Iterate through every day of week in the menu
-            for (int i = 0; i < numDays; i++){
-                //Check if the day matches with the passed day
-                if (jsonObject.asJsonObject().getJsonArray("days").get(i).asJsonObject().getJsonString("date").toString().equals(date)){
-                    //Assign JsonObject day to the matched day and break out of the loop
-                    day = jsonObject.asJsonObject().getJsonArray("days").get(i).asJsonObject();
+        try {
+            ArrayNode days = jsonNode.withArray("days");
+            JsonNode day = null;
+            //Iterate through every day until it reaches the specified date
+            for (JsonNode dayOfWeek : days) {
+                if (dayOfWeek.get("date").toString().equals(date)) {
+                    day = dayOfWeek;
                     break;
                 }
             }
 
             //LinkedHashMap in the format of {stationID-0stationName-0foodCategory = String containing all the items in the station and its category
-            LinkedHashMap<String,String> stations = new LinkedHashMap<>();
+            LinkedHashMap<String, String> stations = new LinkedHashMap<>();
 
             //HashMap to retrieve the stationID-0stationName-0foodCategory key from above HashMap by getting the station ID alone
-            HashMap<String,String> stationsKey = new HashMap<>();
+            HashMap<String, String> stationsKey = new HashMap<>();
 
-            //Get total number of stations
-            int numStations = day.asJsonObject().getJsonObject("menu_info").size();
-
-            //Iterate through every station
-            for (Map.Entry<String,JsonValue> entry : day.asJsonObject().getJsonObject("menu_info").entrySet()){
-                //Obtain station ID (menu_ID)
+            //Iterate through every station and store its ID and name into the HashMap
+            Map<String, JsonNode> menuInfo = objectMapper.convertValue(day.get("menu_info"), new TypeReference<>() {});
+            for (Map.Entry<String, JsonNode> entry : menuInfo.entrySet()) {
                 String stationID = entry.getKey();
-                //Obtain station name
-                String stationName = entry.getValue().asJsonObject().getJsonObject("section_options").getString("display_name");
-                //Store the station ID associated with the respective key format
-                stationsKey.put(stationID,stationID + "-0" + stationName);
+                String stationName = entry.getValue().get("section_options").get("display_name").asText();
+                stationsKey.put(stationID, stationID + "-0" + stationName);
             }
 
-            //Get total number of food items
-            int numItems = day.getJsonArray("menu_items").size();
-
-            //Iterate through every food item
-            for (int i = 0; i < numItems; i++){
-                //Check if the value type is not NULL
-                if (day.getJsonArray("menu_items").get(i).asJsonObject().get("food").getValueType() != JsonValue.ValueType.NULL){
-                    //Obtain station ID (menu_id) associated with the food item
-                    String stationID = day.getJsonArray("menu_items").get(i).asJsonObject().getJsonNumber("menu_id").toString();
-                    //Put Entree and Side categories first
-                    stations.putIfAbsent(stationsKey.get(stationID) + "-0" + "Entree", null);
-                    stations.putIfAbsent(stationsKey.get(stationID) + "-0" + "Side", null);
-                    //Obtain name of the food item
-                    String foodName = day.getJsonArray("menu_items").get(i).asJsonObject().get("food").asJsonObject().getString("name");
-                    //Get the category of the food (entree or side)
-                    String foodCategory = day.getJsonArray("menu_items").get(i).asJsonObject().get("food").asJsonObject().getString("food_category");
-                    if (foodCategory.isBlank()){
-                        foodCategory = "unknown";
-                    }
-                    //Uppercase the first letter of food category
-                    foodCategory = foodCategory.substring(0,1).toUpperCase() + foodCategory.substring(1);
-                    //Get the associated key with the station ID and add the food category to it
+            ArrayNode menuItems = day.withArray("menu_items");
+            JsonNode food;
+            //Iterate through every food item and obtain the following information:
+            //Food Station ID, Food Name, Food Category, Food Calories,
+            for (JsonNode menuItem : menuItems) {
+                if (!menuItem.get("food").isNull()) {
+                    food = menuItem.get("food");
+                    String stationID = menuItem.get("menu_id").asText();
+                    stations.putIfAbsent(stations.get(stationID) + "-0" + "Entree", null);
+                    stations.putIfAbsent(stations.get(stationID) + "-0" + "Side", null);
+                    String foodName = food.get("name").asText();
+                    String foodCategory = food.get("food_category").asText().isBlank() ? "Unknown" : food.get("food_category").asText();
+                    foodCategory = foodCategory.substring(0, 1).toUpperCase() + foodCategory.substring(1);
                     String key = stationsKey.get(stationID) + "-0" + foodCategory;
-                    //Get the calories of the food
-                    String calories = day.getJsonArray("menu_items").get(i).asJsonObject().get("food").asJsonObject().getJsonObject("rounded_nutrition_info").get("calories").toString().replace(".0","");
-                    if (calories.equals("null")){
-                        calories = "N/A";
-                    }
+                    String calories = food.get("rounded_nutrition_info").get("calories").asText().replace(".0", "").replace("null", "N/A");
 
                     //{stationID-0stationName-0foodCategory = String containing all the items in the station and its category
                     if (stations.get(key) == null){
-                        stations.put(key,"\n" + ":arrow_forward: **" +  foodName + "**"  + "\n" + calories + " Cal");
+                        stations.put(key,"\n" + "\u25B6 **" +  foodName + "**"  + "\n" + calories + " Cal");
                     } else {
-                        stations.put(key,stations.get(key) + "\n" + ":arrow_forward: **" +  foodName + "**"  + "\n" + calories + " Cal");
+                        stations.put(key,stations.get(key) + "\n" + "\u25B6 **" +  foodName + "**"  + "\n" + calories + " Cal");
                     }
                 }
             }
             return stations;
             //Catch any null pointer exceptions and return a null hashmap
-        } catch (Exception e){
+        } catch (Exception e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
             return null;

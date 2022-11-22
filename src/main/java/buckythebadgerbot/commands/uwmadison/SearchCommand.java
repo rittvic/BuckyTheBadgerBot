@@ -2,16 +2,17 @@ package buckythebadgerbot.commands.uwmadison;
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
 import buckythebadgerbot.listeners.ButtonListener;
+import com.fasterxml.jackson.databind.JsonNode;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.json.JsonObject;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -53,32 +54,25 @@ public class SearchCommand extends Command {
             String courseInfo = Objects.requireNonNull(event.getOption("query")).getAsString();
 
             //Fetches the results by calling the API through the HTTP client.
-            ArrayList<JsonObject> results = bot.madGradesClient.courseQuery(courseInfo);
-            if (!results.isEmpty()){
-                //String to store the embed content
+            ArrayList<JsonNode> results = (ArrayList<JsonNode>) bot.madGradesClient.courseQuery(courseInfo);
+            System.out.println("reached here");
+            //Add every result for display
+            if (!results.isEmpty()) {
                 StringBuilder resultsDisplay = new StringBuilder();
-
-                //Declare and initialize an ArrayList of buttons to create
                 ArrayList<String> buttonResults = new ArrayList<>();
                 try {
-                    for (JsonObject result : results) {
-                        resultsDisplay.append("`").append(result.getJsonArray("subjects").getJsonObject(0).getJsonString("abbreviation").toString().replaceAll("\"", "")).append(" ").append(result.getJsonNumber("number")).append(" - ").append(result.getJsonString("name").toString().replaceAll("\"", "")).append("`").append("\n");
-                        buttonResults.add(result.getJsonArray("subjects").getJsonObject(0).getJsonString("abbreviation").toString().replaceAll("\"", "") + " " + result.getJsonNumber("number"));
+                    for (JsonNode result : results) {
+                        resultsDisplay.append("`").append(result.withArray("subjects").get(0).get("abbreviation").asText()).append(" ").append(result.get("number")).append(" - ").append(result.get("name").asText()).append("`").append("\n");
+                        buttonResults.add(result.withArray("subjects").get(0).get("abbreviation").asText() + " " + result.get("number"));
                     }
-                } catch(RuntimeException d){
+                } catch (Exception e) {
                     event.getHook().sendMessage("No results found.").queue();
                     return;
                 }
 
-                //String that displays the result size
-                String resultSizeDisplay;
-                if(results.size()>=10){
-                    resultSizeDisplay = "Showing the first " + results.size() + " results.";
-                } else{
-                    resultSizeDisplay = "Showing all " + results.size() + " results.";
-                }
+                //To display the result size
+                String resultSizeDisplay = results.size() >= 10 ? "Showing the first " + results.size() + " results." : "Showing all " + results.size() + " results.";
 
-                //Builds the embed message to show the results
                 EmbedBuilder eb = new EmbedBuilder()
                         .setTitle("Query: " + courseInfo)
                         .setColor(Color.red)
@@ -88,24 +82,20 @@ public class SearchCommand extends Command {
                 long duration = (endTime - startTime) / 1000000;
                 eb.setFooter("This took " + duration + " ms to respond.");
 
-                //Create MessageBuilder
                 MessageCreateBuilder message = new MessageCreateBuilder();
-
-                //Add the embed
                 message.addEmbeds(eb.build());
 
-               //Generate the buttons, one per result
-                ArrayList<Button> buttonsToSend = ButtonListener.getButtons(buttonResults, userID);
+                //Generate the buttons, one per result
+                ArrayList<Button> buttonsToSend = ButtonListener.getButtons(buttonResults, userID, "courseSearch", ButtonStyle.SECONDARY);
 
                 //If there are 5 buttons or less, create a single ActionRow
-                if (buttonsToSend.size()<=5){
+                if (buttonsToSend.size() <= 5) {
                     message.addActionRow(buttonsToSend);
                     event.getHook().sendMessage(message.build()).queue();
 
                     //Disable the buttons after 10 minutes starting the execution of slash command
                     event.getHook().editOriginalComponents(ActionRow.of(buttonsToSend).asDisabled()).queueAfter(10, TimeUnit.MINUTES);
-                } else{
-
+                } else {
                     //If there are more than 5 buttons, create two ActionRows and split the buttons between the rows
                     message.addActionRow(buttonsToSend.subList(0, 5));
                     message.addActionRow(buttonsToSend.subList(5, buttonsToSend.size()));
@@ -113,11 +103,11 @@ public class SearchCommand extends Command {
 
                     //Disable the buttons after 10 minutes starting the execution of slash command
                     event.getHook().editOriginalComponents(
-                            ActionRow.of(buttonsToSend.subList(0,5)).asDisabled(),
-                           ActionRow.of(buttonsToSend.subList(5,buttonsToSend.size())).asDisabled()
+                            ActionRow.of(buttonsToSend.subList(0, 5)).asDisabled(),
+                            ActionRow.of(buttonsToSend.subList(5, buttonsToSend.size())).asDisabled()
                     ).queueAfter(10, TimeUnit.MINUTES);
                 }
-            } else{
+            } else {
                 event.getHook().sendMessage("No results found.").queue();
             }
         }, bot.service);

@@ -15,12 +15,12 @@ public class Professor {
     private String lastName;
     private String department;
     private double wouldTakeAgainPercent;
-    private List<String> topFiveReviews;
+    private List<String> topFiveTags;
     private List<String> coursesTaught;
     private boolean doesExist;
     private boolean fallback;
 
-    public Professor(boolean doesExist, String regularId, String legacyId, double wouldTakeAgainPercent, double avgRating, double avgDifficulty, int numRating, String firstName, String lastName, String department, List<String> topFiveReviews, List<String> coursesTaught){
+    public Professor(boolean doesExist, String regularId, String legacyId, double wouldTakeAgainPercent, double avgRating, double avgDifficulty, int numRating, String firstName, String lastName, String department, List<String> topFiveTags, List<String> coursesTaught){
         this.doesExist = doesExist;
         this.regularId = regularId;
         this.legacyId = legacyId;
@@ -31,7 +31,7 @@ public class Professor {
         this.lastName = lastName;
         this.department = department;
         this.wouldTakeAgainPercent = wouldTakeAgainPercent;
-        this.topFiveReviews = topFiveReviews;
+        this.topFiveTags = topFiveTags;
         this.coursesTaught = coursesTaught;
     }
 
@@ -83,8 +83,8 @@ public class Professor {
         return (int)Math.ceil(this.wouldTakeAgainPercent);
     }
 
-    public List<String> getTopFiveReviews() {
-        return topFiveReviews;
+    public List<String> getTopFiveTags() {
+        return topFiveTags;
     }
 
     public List<String> getCoursesTaught() {
@@ -113,7 +113,7 @@ public class Professor {
                 ", lastName='" + lastName + '\'' +
                 ", department='" + department + '\'' +
                 ", wouldTakeAgainPercent=" + wouldTakeAgainPercent +
-                ", topFiveReviews=" + topFiveReviews +
+                ", topFiveTags=" + topFiveTags +
                 ", courses taught=" + coursesTaught +
                 '}';
     }

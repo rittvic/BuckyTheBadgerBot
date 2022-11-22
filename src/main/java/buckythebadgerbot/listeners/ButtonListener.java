@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
+import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -52,15 +53,15 @@ public class ButtonListener extends ListenerAdapter {
     /**
      * Gathers the buttons to send back to SearchCommand based on the results
      *
-     * @param results an ArrayList of all the results (Course name and number)
+     * @param buttonContents an ArrayList of all the results (Course name and number)
      * @param userID  the user id of the user who initiated the SearchCommand
      * @return an ArrayList of Buttons to add onto Action Rows
      */
-    public static ArrayList<Button> getButtons(ArrayList<String> results, String userID) {
+    public static ArrayList<Button> getButtons(ArrayList<String> buttonContents, String userID, String buttonArgument,ButtonStyle buttonStyle) {
         String uuid = userID + ":" + UUID.randomUUID();
         ArrayList<Button> buttonResults = new ArrayList<>();
-        for (String result : results) {
-            buttonResults.add(Button.secondary(uuid + ":" + result, result));
+        for (String content : buttonContents) {
+            buttonResults.add(Button.of(buttonStyle,uuid + ":" + buttonArgument + ":" + content, content));
         }
         return buttonResults;
     }
@@ -123,7 +124,7 @@ public class ButtonListener extends ListenerAdapter {
      * Method to execute tasks based on the button clicked
      *
      * @param event the event of the button interaction
-     *              NOTE: The entire method is a Runnable task, meaning it is a thread managed by the ExecutorService threadpool. This is to allow concurrent executions.
+     * NOTE: The entire method is a Runnable task, meaning it is a thread managed by the ExecutorService threadpool. This is to allow concurrent executions.
      */
     @Override
     public void onButtonInteraction(@NotNull ButtonInteractionEvent event) {
@@ -131,55 +132,63 @@ public class ButtonListener extends ListenerAdapter {
             logger.info("Executing {}", ButtonListener.class.getSimpleName());
 
             //Check what was pressed
-            //If Search Command: [0] User ID [1] UUID [2] Course
-            //If command that uses pagination menu: [0] User ID [1] UUID [2] "pagination" [3] either "Next" or "Previous"
+            //[0] User ID [1] UUID [2] Argument [3] Argument Value (E.g, pagination or courseSearch)
             String[] pressedArgs = event.getComponentId().split(":");
             //Store the user ID of who pressed the button
             String eventUserID = event.getUser().getId();
-            //Get paginated buttons
-            List<Button> components = paginationButtons.get(pressedArgs[0] + ":" + pressedArgs[1]);
 
             //For the course command - if the user didn't press the same button within 30 seconds, the task executes and the user gets added to the cooldown after.
             //Otherwise, they get a message saying to wait until 30 seconds has passed since the initial button press.
-            if (pressedArgs.length == 3 &&
-                    (!coolDownChecker.containsKey(eventUserID + ":" + pressedArgs[1] + ":" + pressedArgs[2])
-                            || System.currentTimeMillis() > coolDownChecker.get(eventUserID + ":" + pressedArgs[1] + ":" + pressedArgs[2]) + 30000)) {
-                long startTime = System.nanoTime();
-                event.deferReply().queue();
-                ArrayList<String> courseSearch;
-                ArrayList<String> courseInformation;
-                String averageGPA;
-                courseSearch = bot.madGradesClient.courseLookUp(event.getButton().getLabel());
-                if (!courseSearch.isEmpty()) {
-                    averageGPA = bot.madGradesClient.courseAverageGPA(courseSearch.get(0));
-                    courseInformation = Scraper.scrapeCourse(courseSearch.get(1), courseSearch.get(3));
-                    if (!courseInformation.isEmpty()) {
-                        EmbedBuilder eb = new EmbedBuilder()
-                                .setTitle(courseInformation.get(0))
-                                .setColor(Color.RED)
-                                .setDescription((courseInformation.get(2).replaceAll("replace", " ")))
-                                .addField("Cumulative GPA", String.valueOf(averageGPA), false)
-                                .addField("Credits", courseInformation.get(1), false)
-                                .addField("Requisites", courseInformation.get(3), false)
-                                .addField("Course Designation", courseInformation.get(4).replaceAll("replace", "\n"), false)
-                                .addField("Repeatable For Credit", courseInformation.get(5), false)
-                                .addField("Last Taught", courseInformation.get(6), false);
-                        long endTime = System.nanoTime();
-                        long duration = (endTime - startTime) / 1000000;
-                        eb.setFooter("This took " + duration + " ms to respond.");
-                        event.getHook().sendMessageEmbeds(eb.build()).queue();
+            if (pressedArgs[2].equals("courseSearch")){
+                if (!coolDownChecker.containsKey(eventUserID + ":" + pressedArgs[1] + ":" + pressedArgs[3])
+                        || System.currentTimeMillis() > coolDownChecker.get(eventUserID + ":" + pressedArgs[1] + ":" + pressedArgs[3]) + 30000) {
+                    long startTime = System.nanoTime();
+                    event.deferReply().queue();
+                    ArrayList<String> courseSearch;
+                    ArrayList<String> courseInformation;
+                    String averageGPA;
+                    courseSearch = bot.madGradesClient.courseLookUp(event.getButton().getLabel());
+                    if (!courseSearch.isEmpty()) {
+                        averageGPA = bot.madGradesClient.courseAverageGPA(courseSearch.get(0));
+                        courseInformation = Scraper.scrapeCourse(courseSearch.get(1), courseSearch.get(3));
+                        if (!courseInformation.isEmpty()) {
+                            EmbedBuilder eb = new EmbedBuilder()
+                                    .setTitle(courseInformation.get(0))
+                                    .setColor(Color.RED)
+                                    .setDescription((courseInformation.get(2).replaceAll("replace", " ")))
+                                    .addField("Cumulative GPA", String.valueOf(averageGPA), false)
+                                    .addField("Credits", courseInformation.get(1), false)
+                                    .addField("Requisites", courseInformation.get(3), false)
+                                    .addField("Course Designation", courseInformation.get(4).replaceAll("replace", "\n"), false)
+                                    .addField("Repeatable For Credit", courseInformation.get(5), false)
+                                    .addField("Last Taught", courseInformation.get(6), false);
+                            long endTime = System.nanoTime();
+                            long duration = (endTime - startTime) / 1000000;
+                            eb.setFooter("This took " + duration + " ms to respond.");
+                            event.getHook().sendMessageEmbeds(eb.build()).queue();
+                        } else {
+                            event.getHook().sendMessage("Unable to find information on `" + courseSearch.get(3).toUpperCase() + " " + courseSearch.get(1) + " - " + courseSearch.get(4) + "`").queue();
+                        }
                     } else {
-                        event.getHook().sendMessage("Unable to find information on `" + courseSearch.get(3).toUpperCase() + " " + courseSearch.get(1) + " - " + courseSearch.get(4) + "`").queue();
+                        event.getHook().sendMessage("No courses found.").queue();
                     }
+                    //Adds the user and the button they pressed to the cooldown
+                    coolDownChecker.put(eventUserID + ":" + pressedArgs[1] + ":" + pressedArgs[3], System.currentTimeMillis());
                 } else {
-                    event.getHook().sendMessage("No courses found.").queue();
+                    event.reply("Stop spamming! Please wait 30 seconds.").setEphemeral(true).queue();
                 }
-
-                //Adds the user and the button they pressed to the cooldown
-                coolDownChecker.put(eventUserID + ":" + pressedArgs[1] + ":" + pressedArgs[2], System.currentTimeMillis());
-
-                //For the pagination command - condition to check if the buttons are part of a pagination  menu
+                //Clean map of expired timestamps
+                //NOTE: Doing a while loop is faster than Collection.removeif by a few milliseconds since it only iterates through expired elements
+                Iterator<Map.Entry<String, Long>> iterator = coolDownChecker.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry<String, Long> entry = iterator.next();
+                    if (entry.getValue() + 30000 < System.currentTimeMillis()) {
+                        iterator.remove();
+                    }
+                }
             } else if (pressedArgs[2].equals("pagination")) {
+                //Get paginated buttons
+                List<Button> components = paginationButtons.get(pressedArgs[0] + ":" + pressedArgs[1]);
                 //Check if the user requested the original menu
                 if (pressedArgs[0].equals(eventUserID)) {
                     //If the next button was pressed
@@ -241,19 +250,6 @@ public class ButtonListener extends ListenerAdapter {
                     }
                 } else {
                     event.reply("You didn't request this!").setEphemeral(true).queue();
-                }
-            } else {
-                event.reply("Stop spamming! Please wait 30 seconds.").setEphemeral(true).queue();
-            }
-            //Clean map of expired timestamps
-            //NOTE: Doing a while loop is faster than Collection.removeif by a few milliseconds since it only iterates through expired elements
-            Iterator<Map.Entry<String, Long>> iterator = coolDownChecker.entrySet().iterator();
-            while (iterator.hasNext()) {
-                Map.Entry<String, Long> entry = iterator.next();
-                //Check if the timestamp has expired (entry value)
-                if (entry.getValue() + 30000 < System.currentTimeMillis()) {
-                    // remove the entire entry from the hashmap through the iterator
-                    iterator.remove();
                 }
             }
         }, bot.service);

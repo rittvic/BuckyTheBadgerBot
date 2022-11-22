@@ -102,40 +102,27 @@ public class DiningMenuCommand extends Command {
      * @param menuType the chosen menu type from choice argument
      * @return an ArrayList of all embeds in the pagination menu
      */
-    private ArrayList<MessageEmbed> buildMenu(HashMap<String,String> stations, String diningMarket, String menuType, long duration){
-
-       //Set the image thumbnail of the chosen dining market
-        DiningMenuImage thumbnail =  DiningMenuImage.valueOf(diningMarket.substring(0,2).toUpperCase());;
-
-        //Create an ArrayList of embeds
+    private ArrayList<MessageEmbed> buildMenu(HashMap<String, String> stations, String diningMarket, String menuType, long duration) {
+        DiningMenuImage thumbnail = DiningMenuImage.valueOf(diningMarket.substring(0, 2).toUpperCase());
         ArrayList<MessageEmbed> embeds = new ArrayList<>();
 
-        if (stations != null){
+        //Iterate through the stations and build an embed for every station and its food contents
+        if (stations != null) {
             Iterator<Map.Entry<String, String>> iterator = stations.entrySet().iterator();
-
-            //Previous station pointer for hashmap iteration
             String prevStation = null;
-
-            //Declare and initialize EmbedBuilder
             EmbedBuilder embed = new EmbedBuilder();
 
-            //Iterate through the HashMap
             while (iterator.hasNext()) {
-                //Grab the current entry
                 Map.Entry<String, String> entry = iterator.next();
-
                 //If the entry value is null, continue onto the next iteration
-                if (entry.getValue() == null){
+                if (entry.getValue() == null) {
                     continue;
                 }
-
                 String currentStation = entry.getKey().split("-0")[1];
-
-                if (!currentStation.equals(prevStation)){
-                    if (prevStation != null){
+                if (!currentStation.equals(prevStation)) {
+                    if (prevStation != null) {
                         embeds.add(embed.build());
                     }
-                    //Initialize embed to new EmbedBuilder object with edited title
                     embed = new EmbedBuilder()
                             .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
                             .setThumbnail(thumbnail.url)
@@ -144,14 +131,9 @@ public class DiningMenuCommand extends Command {
                             .setColor(Color.red);
 
                 }
-                //Add a new field of the food type and every food item that corresponds with the type
-                embed.addField(entry.getKey().split("-0")[2],entry.getValue(),false);
-
-                //Set previous pointer to the current pointer (station)
+                embed.addField(entry.getKey().split("-0")[2], entry.getValue(), false);
                 prevStation = currentStation;
-
-                //If it is currently on the last entry, build the embed and add it to the ArrayList
-                if (!iterator.hasNext()){
+                if (!iterator.hasNext()) {
                     embeds.add(embed.build());
                 }
             }
