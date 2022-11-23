@@ -11,7 +11,7 @@ It needs permissions to read and send messages, use slash commands, and send emb
 
 These commands are case-insensitive.
 <br><br>
-<em>Note: May not be up-to-date. I try my best to update this page whenever new features are added.<em>
+<em>Note: May not be up-to-date. I try my best to update this page whenever new features are added.</em>
 
 #### Search Command
 
@@ -19,7 +19,7 @@ These commands are case-insensitive.
 
 `e.g., <Calculus>, <Amer Ind>, <Math 340>, <500>`
 
-This queries through the courses and finds the best matches.  It then generates buttons for each result so you can find the course information upon clicking them.
+This queries through the courses and finds the best matches.  It then generates buttons for each result, so you can find the course information upon clicking them.
 
 Example -
 
@@ -140,4 +140,4 @@ If you would like to contribute, whether it is a suggestion or bug fix, please f
 
 This project is licensed under the MIT License - see the [LICENSE.md](LICENSE) file for  details
 
-<b><i> Note: This project is not affiliated with UW-Madison. </b><i>
+<b><i> Note: This project is not affiliated with UW-Madison. </b></i>
