@@ -24,7 +24,6 @@ public class StringSelectListener extends ListenerAdapter {
 
     private final BuckyTheBadgerBot bot;
 
-    //Maps "uuid:profRegularID" to a list of select options
     public static final HashMap<String, List<SelectOption>> StringSelectOptions = new HashMap<>();
 
     private static final Logger logger = LoggerFactory.getLogger(StringSelectListener.class);
@@ -43,8 +42,6 @@ public class StringSelectListener extends ListenerAdapter {
         if (options != null) {
             List<SelectOption> selectOptions = new ArrayList<>();
             for (String option : options) {
-                //Label: option
-                //Value: option:argument
                 selectOptions.add(SelectOption.of(option, option + ":" + argument));
             }
             StringSelectOptions.put(uuid, selectOptions);
@@ -79,7 +76,6 @@ public class StringSelectListener extends ListenerAdapter {
                             ArrayList<StudentRating> ratings = bot.rateMyProfessorClient.getStudentRatings(profRegularId, course);
                             long endTime = System.nanoTime();
                             long duration = (endTime - startTime) / 1000000;
-                            //Store the uuid and the select menu's course and prof id in the checkdown map
                             BuckyTheBadgerBot.coolDownChecker.put(uuid + ":" + course + ":" + profRegularId, System.currentTimeMillis());
                             if (ratings == null) {
                                 event.reply("Could not find any student ratings for `" + course + "`!").queue();

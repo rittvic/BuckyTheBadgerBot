@@ -10,6 +10,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -20,6 +21,7 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Command that retrieves information about a professor from ratemyprofessor.com
@@ -70,7 +72,7 @@ public class ProfCommand extends Command {
                 //Obtain the Professor's reviews
                 if (!prof.getTopFiveTags().isEmpty()) {
                     for (String tag : prof.getTopFiveTags()) {
-                        topTags.append("`").append(tag).append("`").append("\n");
+                        topTags.append("`").append(tag.strip()).append("`").append("\n");
                     }
                 } else {
                     topTags.append("None");
@@ -82,7 +84,7 @@ public class ProfCommand extends Command {
                 //Obtain the Professor's courses taught
                 if (!prof.getCoursesTaught().isEmpty()) {
                     for (String course : prof.getCoursesTaught()) {
-                        coursesTaught.append("`").append(course).append("`").append("\n");
+                        coursesTaught.append("`").append(course.strip()).append("`").append("\n");
                     }
                     //Add every course as an String Select Option
                     StringSelectListener.sendStringSelectOptions(uuid,prof.getFirstName() + " " + prof.getLastName(),prof.getCoursesTaught());
@@ -113,8 +115,9 @@ public class ProfCommand extends Command {
                 if (!prof.getCoursesTaught().isEmpty()){
                     message.addActionRow(Button.of(ButtonStyle.PRIMARY,uuid + ":" + "studentRatings" + ":" + prof.getRegularId(),"See Student Ratings"));
                 }
-
                 event.reply(message.build()).queue();
+                //Disable the buttons after 10 minutes starting the execution of slash command
+                event.getHook().editOriginalComponents(message.getComponents().get(0).asDisabled()).queueAfter(10, TimeUnit.MINUTES);
 
             } else if (prof.getDoesExist() && prof.getFallback()) {
                 event.reply("Professor " + "\"" + prof.getFirstName() + " " + prof.getLastName() + "\"" + " does not teach at UW-Madison!" + " (Note: If this is inaccurate, try to be more specific or blame RMP)").queue();
@@ -134,12 +137,9 @@ public class ProfCommand extends Command {
      */
     public static ArrayList<MessageEmbed> buildMenu(ArrayList<StudentRating> ratings, String profName, long duration) {
         ArrayList<MessageEmbed> embeds = new ArrayList<>();
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         for (int i = 0; i < ratings.size(); i++) {
             EmbedBuilder embed = new EmbedBuilder()
-                    .setTitle(ratings.get(i).getCourse() + " - " + " Student Rating #" + (i + 1))
+                    .setTitle(ratings.get(i).getCourse() + " - " + " Student Rating (" + (i + 1) + "/" + ratings.size() + ")")
                     //.setAuthor("This rating was written on "+ "<t:"+ratings.get(i).getDate()+":f>")
                     .setDescription("This rating was written on " + "<t:" + ratings.get(i).getDate() + ":f>")
                     .setColor(Color.decode(ratings.get(i).getRatingQuality().hexColor))
@@ -155,7 +155,7 @@ public class ProfCommand extends Command {
             StringBuilder tagDisplay = new StringBuilder();
             if (ratings.get(i).getTags() != null) {
                 for (String tag : ratings.get(i).getTags()) {
-                    tagDisplay.append("`").append(tag).append("`").append("\n");
+                    tagDisplay.append("`").append(tag.strip()).append("`").append("\n");
                 }
             } else {
                 tagDisplay.append("None");

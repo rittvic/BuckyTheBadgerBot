@@ -519,8 +519,8 @@ public class APIHandler {
                 if (!menuItem.get("food").isNull()) {
                     food = menuItem.get("food");
                     String stationID = menuItem.get("menu_id").asText();
-                    stations.putIfAbsent(stations.get(stationID) + "-0" + "Entree", null);
-                    stations.putIfAbsent(stations.get(stationID) + "-0" + "Side", null);
+                    stations.putIfAbsent(stationsKey.get(stationID) + "-0" + "Entree", null);
+                    stations.putIfAbsent(stationsKey.get(stationID) + "-0" + "Side", null);
                     String foodName = food.get("name").asText();
                     String foodCategory = food.get("food_category").asText().isBlank() ? "Unknown" : food.get("food_category").asText();
                     foodCategory = foodCategory.substring(0, 1).toUpperCase() + foodCategory.substring(1);

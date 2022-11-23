@@ -44,7 +44,6 @@ public class StudentRating {
     @JsonProperty("ratingTags")
     private String tags;
 
-
     @JsonProperty("difficultyRating")
     private int difficulty;
 
@@ -71,7 +70,11 @@ public class StudentRating {
     }
 
     public String getAttendance() {
-        return attendance;
+        if (this.attendance.isEmpty()){
+            return "N/A";
+        } else {
+            return this.attendance;
+        }
     }
 
     public String getWouldTakeAgain() {
@@ -116,15 +119,10 @@ public class StudentRating {
     }
 
     public int getQuality() {
-        return quality;
+        return this.quality;
     }
 
     public StudentRatingQualityImage getRatingQuality() {
-        //1-5
-        //if 4-5, then :sunglasses: awesome
-        //if 3, then :straight: average
-        //if 1-2, then :weary: awful
-        //this would be the helpful rating i guess
         if (this.quality == 1 || this.quality == 2) {
             return StudentRatingQualityImage.AWFUL;
         } else if (this.quality == 3) {

@@ -1,6 +1,6 @@
 # BuckyTheBadger Bot
 
-A Discord bot to search for courses and professors at UW-Madison.
+A Discord bot to search for courses, professors, and other information at UW-Madison.
 
 ## How To Use The Bot
 
@@ -10,6 +10,8 @@ It needs permissions to read and send messages, use slash commands, and send emb
 ### Commands
 
 These commands are case-insensitive.
+<br><br>
+<em>Note: May not be up-to-date. I try my best to update this page whenever new features are added.<em>
 
 #### Search Command
 
@@ -57,9 +59,16 @@ Searches for a professor and displays the following information:
 - Top Tags
 - Courses Taught
 
+
+You can also view student ratings for every course taught by the professor. 
+
 Example -
 
-![Example3](https://cdn.discordapp.com/attachments/1007141650281279568/1007153325298438236/unknown.png)
+![Example3](https://media.discordapp.net/attachments/990708980277993562/1044875302356123678/image.png)
+
+![Example3.1](https://media.discordapp.net/attachments/1007141650281279568/1044875638928064572/image.png)
+
+![Example3.2](https://media.discordapp.net/attachments/990708980277993562/1044874874071552011/image.png?width=638&height=676)
 
 #### Gym Command
 
@@ -69,7 +78,7 @@ Check live usages for gym equipments at the Nicholas Recreation Center and the S
 
 Example -
 
-![Example4](https://cdn.discordapp.com/attachments/1007141650281279568/1034288672641654825/unknown.png)
+![Example4](https://media.discordapp.net/attachments/1007141650281279568/1044875885582503946/image.png)
 
 #### Dining Hall Command
 
@@ -81,11 +90,11 @@ Display a dining menu consisting of every station and its food items within ever
 <br><br>
 Example -
 
-![Example5](https://media.discordapp.net/attachments/1007141650281279568/1037369558928986192/unknown.png)
+![Example5](https://media.discordapp.net/attachments/1007141650281279568/1044876138054422558/image.png)
 
 ## Self Hosting
 
-To get a local copy of the bot up and running for development and testing purposes, follow these instructions.
+To get a local copy of the bot up and running for development and testing purposes, follow these instructions:
 
 ### Prerequisites
 
@@ -107,12 +116,11 @@ git clone https://github.com/rittvic/BuckyTheBadgerBot.git
 
 ## Built With
 
-* [Java Discord API (JDA)](https://github.com/DV8FromTheWorld/JDA) - The Java wrapper for Discord API
+* [Java Discord API (JDA)](https://github.com/DV8FromTheWorld/JDA) - a Java wrapper for the Discord API
 * [jsoup](https://github.com/jhy/jsoup/) - HTML parser library
-* [JSON Processing](https://mvnrepository.com/artifact/org.glassfish/javax.json) - To parse JSON (1/2)
-* [JSON Processing API](https://mvnrepository.com/artifact/javax.json/javax.json-api) - To parse JSON (2/2)
+* [Jackson](https://github.com/FasterXML/jackson) - To parse and serialize/deserialize JSON
 * [Dotenv](https://github.com/cdimascio/dotenv-java) - Module to load environment variables
-* [Maven](https://maven.apache.org/) - Dependency management
+* [Maven](https://maven.apache.org/) - Dependency manager
 
 ## Where I Get The Information From
 * [api.madgrades.com](https://api.madgrades.com/)
