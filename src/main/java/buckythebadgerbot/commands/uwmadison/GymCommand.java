@@ -2,7 +2,7 @@ package buckythebadgerbot.commands.uwmadison;
 
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
-import buckythebadgerbot.listeners.ButtonListener;
+import buckythebadgerbot.utility.pagination.PaginationUtility;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -33,7 +33,7 @@ public class GymCommand extends Command {
     /**
      * Method to execute the task of the command
      * @param event the event of the slash command
-     * NOTE: The entire command is a Runnable task, meaning it is a thread managed by the ExecutorService threadpool. This is to allow concurrent executions.
+     * NOTE: The entire command is a Runnable task, meaning it is a thread managed by the ExecutorService threadpool. This is to allow asynchronous executions.
      */
     @Override
     public void execute(SlashCommandInteractionEvent event) {
@@ -51,7 +51,7 @@ public class GymCommand extends Command {
                 //Send a paginated menu
                 ReplyCallbackAction action = event.replyEmbeds(gymEmbeds.get(0));
                 if (gymEmbeds.size() > 1){
-                    ButtonListener.sendPaginatedMenu(event.getUser().getId(), action, gymEmbeds);
+                    PaginationUtility.sendPaginatedMenu(event.getUser().getId(), action, gymEmbeds);
                     return;
                 }
                 action.queue();

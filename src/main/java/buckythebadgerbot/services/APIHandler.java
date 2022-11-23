@@ -1,6 +1,8 @@
 package buckythebadgerbot.services;
 
-import buckythebadgerbot.pojo.Professor;
+import buckythebadgerbot.pojo.ratemyprofessors.Professor;
+import buckythebadgerbot.pojo.ratemyprofessors.StudentRating;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,8 +18,8 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 
 /**
  * A dedicated API Handler class to handle all HTTP requests for the bot
@@ -203,14 +205,15 @@ public class APIHandler {
         HttpResponse<String> response;
         ObjectMapper objectMapper;
         JsonNode jsonNode;
+        Professor prof = new Professor();
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             objectMapper = new ObjectMapper();
             jsonNode = objectMapper.readTree(response.body());
         } catch (IOException | InterruptedException e) {
-            return new Professor(false);
+            prof.setDoesExist(false);
+            return prof;
         }
-        ArrayList<String> profInformation = new ArrayList<>();
         try {
             //Pick the first UW-Madison professor that shows up in the results. If none are there, it is set to the very first result (also by default).
             int numResults = jsonNode.get("data").get("search").get("teachers").withArray("edges").size();
@@ -221,13 +224,16 @@ public class APIHandler {
                     node = i;
                 }
             }
+
             //Check to see if the professor exists. If it does, then fetch the id, legacy id and wouldTakeAgainPercent
-            profInformation.add(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("school").get("name").asText());
-            profInformation.add(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("id").asText());
-            profInformation.add(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("legacyId").asText());
-            profInformation.add(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("wouldTakeAgainPercent").asText());
+            prof.setSchool(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("school").get("name").asText());
+            prof.setRegularId(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("id").asText());
+            prof.setLegacyId(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("legacyId").asText());
+            prof.setWouldTakeAgainPercent(jsonNode.get("data").get("search").get("teachers").withArray("edges").get(node).get("node").get("wouldTakeAgainPercent").asDouble());
+
         } catch (NullPointerException e) {
-            return new Professor(false);
+            prof.setDoesExist(false);
+            return prof;
         }
 
         //Sending a new request with id as parameter to fetch more information
@@ -266,26 +272,34 @@ public class APIHandler {
                         "d\\n    name\\n    id\\n  }\\n}\\n\\nfragment TeacherBookmark_teacher on Teacher {\\n  id\\n  isSaved\\n}\\n\\nfragment NumRatingsLink_teacher on Teacher {\\n  numRatings\\n  ...RateTeacherLink_teacher\\n}\\n\\nf" +
                         "ragment RatingDistributionChart_ratingsDistribution on ratingsDistribution {\\n  r1\\n  r2\\n  r3\\n  r4\\n  r5\\n}\\n\\nfragment HeaderDescription_teacher on Teacher {\\n  id\\n  firstName\\n  lastName\\n  depar" +
                         "tment\\n  school {\\n    legacyId\\n    name\\n    id\\n  }\\n  ...TeacherTitles_teacher\\n  ...TeacherBookmark_teacher\\n}\\n\\nfragment HeaderRateButton_teacher on Teacher {\\n  ...RateTeacherLink_teacher\\n}\\" +
-                        "n\\nfragment TeacherTitles_teacher on Teacher {\\n  department\\n  school {\\n    legacyId\\n    name\\n    id\\n  }\\n}\\n\",\"variables\":{\"id\":\"" + profInformation.get(1) + "\"}}"))
+                        "n\\nfragment TeacherTitles_teacher on Teacher {\\n  department\\n  school {\\n    legacyId\\n    name\\n    id\\n  }\\n}\\n\",\"variables\":{\"id\":\"" + prof.getRegularId() + "\"}}"))
                 .uri(URI.create(RMP_URL)).build();
 
         try {
             response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             jsonNode = objectMapper.readTree(response.body());
         } catch (IOException | InterruptedException e) {
-            return new Professor(false);
+            prof.setDoesExist(false);
+            return prof;
         }
 
-        List<String> topFiveReviews;
+        List<String> topFiveTags;
         List<String> sortedProfCourses;
         try {
             //Fetch the basic information of the professor
-            profInformation.add(jsonNode.get("data").get("node").get("avgRating").asText());
-            profInformation.add(jsonNode.get("data").get("node").get("avgDifficulty").asText());
-            profInformation.add(jsonNode.get("data").get("node").get("numRatings").asText());
-            profInformation.add(jsonNode.get("data").get("node").get("firstName").asText());
-            profInformation.add(jsonNode.get("data").get("node").get("lastName").asText());
-            profInformation.add(jsonNode.get("data").get("node").get("department").asText());
+            prof.setAvgRating(jsonNode.get("data").get("node").get("avgRating").asDouble());
+            prof.setAvgDifficulty(jsonNode.get("data").get("node").get("avgDifficulty").asDouble());
+            prof.setNumRating(jsonNode.get("data").get("node").get("numRatings").asInt());
+            prof.setFirstName(jsonNode.get("data").get("node").get("firstName").asText());
+            prof.setLastName(jsonNode.get("data").get("node").get("lastName").asText());
+            prof.setDepartment(jsonNode.get("data").get("node").get("department").asText());
+
+            //If the professor exists, but doesn't teach at UW-Madison, set fallback and does exist to true, and return the professor
+            if (!prof.getSchool().equalsIgnoreCase("University of Wisconsin - Madison")) {
+                prof.setFallback(true);
+                prof.setDoesExist(true);
+                return prof;
+            }
 
             //Fetch the top five reviews (or all if the total reviews is less than five) of the professor and store it in a List
             ArrayNode teacherRatingTags = jsonNode.get("data").get("node").withArray("teacherRatingTags");
@@ -293,12 +307,13 @@ public class APIHandler {
             for (JsonNode ratingTag : teacherRatingTags) {
                 profReviews.add(ratingTag);
             }
-            topFiveReviews = profReviews.stream()
+            topFiveTags = profReviews.stream()
                     .sorted(Comparator.comparingInt((JsonNode obj) -> obj.get("tagCount").asInt()).reversed())
                     .map((JsonNode obj) -> obj.get("tagName").asText()).toList();
-            if (topFiveReviews.size() >= 5) {
-                topFiveReviews = topFiveReviews.subList(0, 5);
+            if (topFiveTags.size() >= 5) {
+                topFiveTags = topFiveTags.subList(0, 5);
             }
+            prof.setTopFiveTags(topFiveTags);
 
             //Fetch the courses taught by the professor and store it in a List
             ArrayNode teacherCourses = jsonNode.get("data").get("node").withArray("courseCodes");
@@ -312,18 +327,75 @@ public class APIHandler {
             if (sortedProfCourses.size() >= 10) {
                 sortedProfCourses = sortedProfCourses.subList(0, 10);
             }
+            prof.setCoursesTaught(sortedProfCourses);
+
         } catch (Exception e) {
-            return new Professor(false);
+            prof.setDoesExist(false);
+            return prof;
         }
+        return prof;
+    }
 
-        //If the professor exists, but doesn't teach at UW-Madison, returns the Professor object saying so
-        if (!profInformation.get(0).equalsIgnoreCase("University of Wisconsin - Madison")) {
-            return new Professor(true, true, profInformation.get(7), profInformation.get(8));
-
-            //Return Professor object with the all the fetched information
-        } else {
-            return new Professor(true, profInformation.get(1), profInformation.get(2), Double.parseDouble(profInformation.get(3)), Double.parseDouble(profInformation.get(4)), Double.parseDouble(profInformation.get(5)),
-                    Integer.parseInt(profInformation.get(6)), profInformation.get(7), profInformation.get(8), profInformation.get(9), topFiveReviews, sortedProfCourses);
+    /**
+     * Fetches a list of student ratings on a particular course taught by a professor
+     * @param profRegularId the id of the professor
+     * @param course the course to fetch student ratings from
+     * @return a list of StudentRating objects
+     */
+    public ArrayList<StudentRating> getStudentRatings (String profRegularId, String course){
+        HttpRequest request = HttpRequest.newBuilder()
+                .header("Authorization", "Basic " + this.apiKey)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString("{\"query\":\"query RatingsListQuery(\\n  $count: Int!\\n  $id: ID!\\n  $courseFilter: String\\n  " +
+                        "$cursor: String\\n) {\\n  node(id: $id) {\\n    __typename\\n    ... on Teacher {\\n      ...RatingsList_teacher_4pguUW\\n    }\\n    " +
+                        "id\\n  }\\n}\\n\\nfragment RatingsList_teacher_4pguUW on Teacher {\\n  id\\n  legacyId\\n  lastName\\n  numRatings\\n  school {\\n    id\\n   " +
+                        " legacyId\\n    name\\n    city\\n    state\\n    avgRating\\n    numRatings\\n  }\\n  ...Rating_teacher\\n  ...NoRatingsArea_teacher\\n  ratings(first:" +
+                        " $count, after: $cursor, courseFilter: $courseFilter) {\\n    edges {\\n      cursor\\n      node {\\n        ...Rating_rating\\n        id\\n      " +
+                        "  __typename\\n      }\\n    }\\n    pageInfo {\\n      hasNextPage\\n      endCursor\\n    }\\n  }\\n}\\n\\nfragment Rating_teacher on Teacher {\\n " +
+                        " ...RatingFooter_teacher\\n  ...RatingSuperHeader_teacher\\n  ...ProfessorNoteSection_teacher\\n}\\n\\nfragment NoRatingsArea_teacher on Teacher {\\n " +
+                        " lastName\\n  ...RateTeacherLink_teacher\\n}\\n\\nfragment Rating_rating on Rating {\\n  comment\\n  flagStatus\\n  createdByUser\\n  teacherNote {\\n  " +
+                        "  id\\n  }\\n  ...RatingHeader_rating\\n  ...RatingSuperHeader_rating\\n  ...RatingValues_rating\\n  ...CourseMeta_rating\\n  ...RatingTags_rating\\n  " +
+                        "...RatingFooter_rating\\n  ...ProfessorNoteSection_rating\\n}\\n\\nfragment RatingHeader_rating on Rating {\\n  date\\n  class\\n  helpfulRating\\n  " +
+                        "clarityRating\\n  isForOnlineClass\\n}\\n\\nfragment RatingSuperHeader_rating on Rating {\\n  legacyId\\n}\\n\\nfragment RatingValues_rating on Rating {\\n  " +
+                        "helpfulRating\\n  clarityRating\\n  difficultyRating\\n}\\n\\nfragment CourseMeta_rating on Rating {\\n  attendanceMandatory\\n  wouldTakeAgain\\n  grade\\n" +
+                        "  textbookUse\\n  isForOnlineClass\\n  isForCredit\\n}\\n\\nfragment RatingTags_rating on Rating {\\n  ratingTags\\n}\\n\\nfragment RatingFooter_rating on Rating" +
+                        " {\\n  id\\n  comment\\n  adminReviewedAt\\n  flagStatus\\n  legacyId\\n  thumbsUpTotal\\n  thumbsDownTotal\\n  thumbs {\\n    userId\\n    thumbsUp\\n    thumbsDown\\n" +
+                        "    id\\n  }\\n  teacherNote {\\n    id\\n  }\\n}\\n\\nfragment ProfessorNoteSection_rating on Rating {\\n  teacherNote {\\n    ...ProfessorNote_note\\n    id\\n  }\\n " +
+                        " ...ProfessorNoteEditor_rating\\n}\\n\\nfragment ProfessorNote_note on TeacherNotes {\\n  comment\\n  ...ProfessorNoteHeader_note\\n" +
+                        "  ...ProfessorNoteFooter_note\\n}\\n\\nfragment ProfessorNoteEditor_rating on Rating {\\n  id\\n  legacyId\\n  class\\n  teacherNote {\\n " +
+                        "   id\\n    teacherId\\n    comment\\n  }\\n}\\n\\nfragment ProfessorNoteHeader_note on TeacherNotes {\\n  createdAt\\n  updatedAt\\n}\\n\\nfragment " +
+                        "ProfessorNoteFooter_note on TeacherNotes {\\n  legacyId\\n  flagStatus\\n}\\n\\nfragment RateTeacherLink_teacher on Teacher {\\n  legacyId\\n  numRatings\\n" +
+                        "  lockStatus\\n}\\n\\nfragment RatingFooter_teacher on Teacher {\\n  id\\n  legacyId\\n  lockStatus\\n  isProfCurrentUser\\n}\\n\\nfragment " +
+                        "RatingSuperHeader_teacher on Teacher {\\n  firstName\\n  lastName\\n  legacyId\\n  school {\\n    name\\n    id\\n  }\\n}\\n\\nfragment ProfessorNoteSection_teacher on Teacher" +
+                        " {\\n  ...ProfessorNote_teacher\\n  ...ProfessorNoteEditor_teacher\\n}\\n\\nfragment ProfessorNote_teacher on Teacher {\\n  ...ProfessorNoteHeader_teacher\\n  " +
+                        "...ProfessorNoteFooter_teacher\\n}\\n\\nfragment ProfessorNoteEditor_teacher on Teacher {\\n  id\\n}\\n\\nfragment ProfessorNoteHeader_teacher on Teacher {\\n  " +
+                        "lastName\\n}\\n\\nfragment ProfessorNoteFooter_teacher on Teacher {\\n  legacyId\\n  isProfCurrentUser\\n}\\n\"," +
+                        "\"variables\":{\"count\":100,\"id\":\"" + profRegularId + "\",\"courseFilter\":\"" + course + "\",\"cursor\":null}}"))
+                .uri(URI.create(RMP_URL)).build();
+        HttpResponse<String> response;
+        ObjectMapper objectMapper;
+        JsonNode jsonNode;
+        try {
+            response = this.httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            objectMapper = new ObjectMapper();
+            jsonNode = objectMapper.readTree(response.body());
+        } catch (IOException | InterruptedException e) {
+            return null;
+        }
+        ArrayList<StudentRating> studentRatings = new ArrayList<>();
+        try {
+            ArrayNode ratings = jsonNode.get("data").get("node").get("ratings").withArray("edges");
+            //Deserialize every rating into a StudentRating object and add the object to the list
+            StudentRating studentRating;
+            for (JsonNode ratingData : ratings) {
+                JsonNode rating = ratingData.get("node");
+                studentRating = objectMapper.readValue(rating.toString(), StudentRating.class);
+                studentRating.setCourse(course);
+                studentRatings.add(studentRating);
+            }
+            return studentRatings;
+        } catch (JsonProcessingException e) {
+            return null;
         }
     }
 
@@ -360,10 +432,11 @@ public class APIHandler {
                 String totalCapacity = equipment.get("TotalCapacity").asText();
                 String lastUpdatedTime;
 
-                //Convert the standard timestamp (GMT-5) to unix timestamp (epoch)
+
+                //Convert the timestamp (which is set in US/Central) to unix timestamp (epoch)
+                sdf.setTimeZone(TimeZone.getTimeZone(ZoneId.of("US/Central")));
                 Date dt = sdf.parse(equipment.get("LastUpdatedDateAndTime").asText());
-                //We have to add six hours since the prod bot is not based in UTC-5
-                long epoch = dt.getTime() + TimeUnit.HOURS.toMillis(6);
+                long epoch = dt.getTime();
                 lastUpdatedTime = String.valueOf((int) (epoch / 1000));
 
                 //Add the locations to the respective hashmap

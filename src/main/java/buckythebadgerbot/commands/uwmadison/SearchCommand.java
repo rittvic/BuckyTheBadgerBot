@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -50,7 +51,7 @@ public class SearchCommand extends Command {
             logger.info("Executing {}", SearchCommand.class.getSimpleName());
             event.deferReply().queue();
             long startTime = System.nanoTime();
-            String userID = event.getUser().getId();
+            String uuid = event.getUser().getId() + ":" + UUID.randomUUID();
             String courseInfo = Objects.requireNonNull(event.getOption("query")).getAsString();
 
             //Fetches the results by calling the API through the HTTP client.
@@ -86,7 +87,7 @@ public class SearchCommand extends Command {
                 message.addEmbeds(eb.build());
 
                 //Generate the buttons, one per result
-                ArrayList<Button> buttonsToSend = ButtonListener.getButtons(buttonResults, userID, "courseSearch", ButtonStyle.SECONDARY);
+                ArrayList<Button> buttonsToSend = ButtonListener.getButtons(buttonResults, uuid, "courseSearch", ButtonStyle.SECONDARY);
 
                 //If there are 5 buttons or less, create a single ActionRow
                 if (buttonsToSend.size() <= 5) {

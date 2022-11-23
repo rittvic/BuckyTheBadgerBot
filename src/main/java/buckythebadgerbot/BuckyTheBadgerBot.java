@@ -1,6 +1,7 @@
 package buckythebadgerbot;
 
 import buckythebadgerbot.commands.CommandManager;
+import buckythebadgerbot.listeners.StringSelectListener;
 import buckythebadgerbot.services.APIHandler;
 import buckythebadgerbot.listeners.ButtonListener;
 import io.github.cdimascio.dotenv.Dotenv;
@@ -11,6 +12,9 @@ import net.dv8tion.jda.api.sharding.DefaultShardManagerBuilder;
 import net.dv8tion.jda.api.sharding.ShardManager;
 import org.jetbrains.annotations.NotNull;
 import javax.security.auth.login.LoginException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -21,12 +25,18 @@ import java.util.concurrent.Executors;
 public class BuckyTheBadgerBot {
 
     public APIHandler madGradesClient;
-    public APIHandler RMPClient;
+    public APIHandler rateMyProfessorClient;
     public APIHandler client;
     public ExecutorService service;
     public final @NotNull ButtonListener buttonListener;
+    public final @NotNull StringSelectListener stringSelectListener;
     public @NotNull final Dotenv config;
     public @NotNull final ShardManager shardManager;
+
+    //To implement anti-spam measurement for certain trigger events
+    //Synchronized the LinkedHashMap to allow concurrent modifications
+    //Follows the format {"UUID:buttonName"=timestamp}
+    public static final Map<String, Long> coolDownChecker = Collections.synchronizedMap(new LinkedHashMap<>());
 
     public BuckyTheBadgerBot() throws LoginException {
 
@@ -36,7 +46,7 @@ public class BuckyTheBadgerBot {
 
         //Setup HTTP tools
         madGradesClient = new APIHandler(config.get("MADGRADES_TOKEN"));
-        RMPClient = new APIHandler(config.get("RMP_TOKEN"));
+        rateMyProfessorClient = new APIHandler(config.get("RMP_TOKEN"));
         client = new APIHandler();
 
         //Setup threadpool
@@ -55,14 +65,17 @@ public class BuckyTheBadgerBot {
 
         //Register listeners
         buttonListener = new ButtonListener(this);
-        shardManager.addEventListener(buttonListener);
+        stringSelectListener = new StringSelectListener(this);
+        shardManager.addEventListener(buttonListener,stringSelectListener);
 
     }
 
+    @NotNull
     public Dotenv getConfig(){
         return config;
     }
 
+    @NotNull
     public ShardManager getShardManager(){
         return shardManager;
     }

@@ -41,7 +41,7 @@ public class CourseCommand extends Command {
     /**
      * Method to execute the task of the command
      * @param event the event of the slash command
-     * NOTE: The entire command is a Runnable task, meaning it is a thread managed by the ExecutorService threadpool. This is to allow concurrent executions.
+     * NOTE: The entire command is a Runnable task, meaning it is a thread managed by the ExecutorService threadpool. This is to allow asynchronous executions.
      */
     @Override
     public void execute(SlashCommandInteractionEvent event) {

@@ -15,7 +15,7 @@ public enum DiningMenuImage {
 
     /**
      * Enum constructor
-     * @param url the url of the mage
+     * @param url the url of the image
      */
     DiningMenuImage(String url) {
         this.url = url;
