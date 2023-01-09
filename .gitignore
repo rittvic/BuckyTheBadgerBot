@@ -28,4 +28,4 @@ target/
 # Other files and folders
 src/main/java/META-INF
 .env
-/db_init.sql
+db_init.sql
