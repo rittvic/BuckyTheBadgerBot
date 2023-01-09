@@ -1,9 +1,9 @@
 package buckythebadgerbot.listeners;
 
 import buckythebadgerbot.BuckyTheBadgerBot;
-import buckythebadgerbot.commands.uwmadison.ProfCommand;
-import buckythebadgerbot.pojo.ratemyprofessors.StudentRating;
-import buckythebadgerbot.utility.pagination.PaginationUtility;
+import buckythebadgerbot.commands.impl.uwmadison.ProfCommand;
+import buckythebadgerbot.data.StudentRating;
+import buckythebadgerbot.utils.pagination.PaginationUtils;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.component.StringSelectInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
@@ -84,7 +84,7 @@ public class StringSelectListener extends ListenerAdapter {
                             ArrayList<MessageEmbed> studentRatingEmbeds = ProfCommand.buildMenu(ratings, profName, duration);
                             ReplyCallbackAction action = event.replyEmbeds(studentRatingEmbeds.get(0));
                             if (studentRatingEmbeds.size() > 1) {
-                                PaginationUtility.sendPaginatedMenu(eventUserID, action, studentRatingEmbeds);
+                                PaginationUtils.sendPaginatedMenu(eventUserID, action, studentRatingEmbeds);
                                 return;
                             }
                             action.queue();
@@ -97,6 +97,7 @@ public class StringSelectListener extends ListenerAdapter {
                 }
                 //Clean map of expired timestamps
                 //NOTE: Doing a while loop is faster than Collection.removeif by a few milliseconds since it only iterates through expired elements
+                logger.info("Cleaning cooldown checker...");
                 Iterator<Map.Entry<String, Long>> iterator = BuckyTheBadgerBot.coolDownChecker.entrySet().iterator();
                 while (iterator.hasNext()) {
                     Map.Entry<String, Long> entry = iterator.next();

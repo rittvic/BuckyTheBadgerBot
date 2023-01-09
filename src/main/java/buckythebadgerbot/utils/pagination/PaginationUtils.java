@@ -1,6 +1,6 @@
-package buckythebadgerbot.utility.pagination;
+package buckythebadgerbot.utils.pagination;
 
-import buckythebadgerbot.listeners.ButtonListener;
+import buckythebadgerbot.BuckyTheBadgerBot;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * Utility class to handle anything related to pagination
  */
-public class PaginationUtility {
+public class PaginationUtils {
 
     //Map to store every embed for a paginated menu
     public static final Map<String, List<MessageEmbed>> paginatedMenus = new HashMap<>();
@@ -134,6 +134,6 @@ public class PaginationUtility {
             paginationButtons.remove(uuid);
             paginatedMenus.remove(uuid);
         };
-        ButtonListener.scheduledExecutor.schedule(task, 10, TimeUnit.MINUTES);
+        BuckyTheBadgerBot.scheduledExecutor.schedule(task, 10, TimeUnit.MINUTES);
     }
 }

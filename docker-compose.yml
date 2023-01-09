@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+
+  database:
+    container_name: buckythebadgerbot-db
+    image: postgres:15.1
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    expose:
+      - "5432"
+    volumes:
+      - ./db_init.sql:/docker-entrypoint-initdb.d/db_init.sql
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    networks:
+      - buckythebadgerbot
+
+  discord-bot:
+    container_name: buckythebadgerbot-app
+    # replace this with the image from your own github package registry :)
+    image: testbotimage:latest
+    restart: on-failure
+    depends_on:
+      database:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - buckythebadgerbot
+
+volumes:
+  postgres-data:
+
+networks:
+  buckythebadgerbot:
+    name: buckythebadgerbot

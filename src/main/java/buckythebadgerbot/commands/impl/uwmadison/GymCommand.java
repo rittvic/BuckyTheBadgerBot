@@ -1,8 +1,8 @@
-package buckythebadgerbot.commands.uwmadison;
+package buckythebadgerbot.commands.impl.uwmadison;
 
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
-import buckythebadgerbot.utility.pagination.PaginationUtility;
+import buckythebadgerbot.utils.pagination.PaginationUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -42,7 +42,7 @@ public class GymCommand extends Command {
 
             //Create an ArrayList of embeds by calling the HTTP client's gymLookup() method
             long startTime = System.nanoTime();
-            ArrayList<HashMap<String,String>> gymInformation = bot.client.gymLookup();
+            ArrayList<HashMap<String,String>> gymInformation = bot.gymClient.getGymUsages();
             long endTime = System.nanoTime();
             long duration = (endTime - startTime) / 1000000;
 
@@ -51,7 +51,7 @@ public class GymCommand extends Command {
                 //Send a paginated menu
                 ReplyCallbackAction action = event.replyEmbeds(gymEmbeds.get(0));
                 if (gymEmbeds.size() > 1){
-                    PaginationUtility.sendPaginatedMenu(event.getUser().getId(), action, gymEmbeds);
+                    PaginationUtils.sendPaginatedMenu(event.getUser().getId(), action, gymEmbeds);
                     return;
                 }
                 action.queue();
@@ -77,7 +77,7 @@ public class GymCommand extends Command {
                 EmbedBuilder embed = new EmbedBuilder()
                         .setTitle(entry.keySet().stream().findFirst().get().split("\\|")[0])
                         .setColor(Color.red)
-                        .setFooter("This took " + duration + " ms to respond")
+                        .setFooter("This took " + duration + " ms to respond.")
                         .setTimestamp(Instant.now());
 
                 //Iterate through every pair in the HashMap

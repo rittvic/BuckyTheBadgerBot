@@ -1,27 +1,30 @@
 package buckythebadgerbot.listeners;
 
 import buckythebadgerbot.BuckyTheBadgerBot;
-import buckythebadgerbot.services.Scraper;
-import buckythebadgerbot.utility.pagination.PaginationUtility;
+import buckythebadgerbot.data.Course;
+import buckythebadgerbot.utils.pagination.PaginationUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.component.ButtonInteractionEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
+import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
+import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
-import java.util.*;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * Listens for button clicks and handles them accordingly
@@ -33,25 +36,54 @@ public class ButtonListener extends ListenerAdapter {
     private static final Logger logger = LoggerFactory.getLogger(ButtonListener.class);
 
     //Scheduler to disable buttons after a set period of time
-    public static final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(20);
+    //public static final ScheduledExecutorService scheduledExecutor = Executors.newScheduledThreadPool(20);
 
     public ButtonListener(BuckyTheBadgerBot bot) {
         this.bot = bot;
     }
 
     /**
-     * Gathers the buttons to send back to SearchCommand based on the results
-     *
-     * @param buttonContents an ArrayList of all the results (Course name and number)
-     * @param uuid the user ID + random UUID of the user who initiated the SearchCommand
-     * @return an ArrayList of Buttons to add onto Action Rows
+     * Generates buttons, 5 per row (since that's the limit set by the Discord API)
+     * @param uuid the user ID + random UUID of the user
+     * @param buttonArgument The argument ID of the Button for listener event
+     * @param buttonLabels an ArrayList of button labels (strings) for Button conversion
+     * @param buttonStyle the specified style of each Button
+     * @param action the original event that called for the button generation
      */
-    public static ArrayList<Button> getButtons(ArrayList<String> buttonContents, String uuid, String buttonArgument,ButtonStyle buttonStyle) {
-        ArrayList<Button> buttonResults = new ArrayList<>();
-        for (String content : buttonContents) {
-            buttonResults.add(Button.of(buttonStyle,uuid + ":" + buttonArgument + ":" + content, content));
+    public static void generateButtons(String uuid, String buttonArgument, ArrayList<String> buttonLabels, ButtonStyle buttonStyle, ReplyCallbackAction action) {
+        if (buttonLabels.size() > 25) {
+            throw new IllegalArgumentException("Cannot have more than 25 buttons!");
         }
-        return buttonResults;
+        ArrayList<ActionRow> actionRows = new ArrayList<>();
+        int numActionRows = (buttonLabels.size() - 1) / 5 + 1;
+        ArrayList<Button> buttonsRow;
+        for (int i = 0; i < numActionRows; i++) {
+            buttonsRow = new ArrayList<>();
+            for (int j = 0; j < 5; j++) {
+                if (!buttonLabels.isEmpty()) {
+                    String buttonLabel = buttonLabels.remove(0);
+                    buttonsRow.add(Button.of(buttonStyle,uuid + ":" + buttonArgument + ":" + buttonLabel, buttonLabel));
+                } else {
+                    break;
+                }
+            }
+            actionRows.add(ActionRow.of(buttonsRow));
+        }
+        //After setting the message components to the newly generated ActionRows and executing it, call the method to disable the ActionRows (buttons) after 10 minutes
+        action.setComponents(actionRows).queue(interactionHook -> disableButtons(actionRows,interactionHook));
+    }
+
+    /**
+     * Disable buttons after 10 minutes
+     * @param actionRows The ActionRows (buttons) to disable
+     * @param hook the message hook pointing to the original message; this will be the message to disable the buttons from
+     */
+    public static void disableButtons(ArrayList<ActionRow> actionRows, InteractionHook hook) {
+        Runnable task = () -> {
+            List<ActionRow> newActionRows = actionRows.stream().map(ActionRow::asDisabled).collect(Collectors.toList());
+            hook.editOriginalComponents(newActionRows).queue();
+        };
+        BuckyTheBadgerBot.scheduledExecutor.schedule(task, 10, TimeUnit.MINUTES);
     }
 
     /**
@@ -71,45 +103,39 @@ public class ButtonListener extends ListenerAdapter {
             //Store the user ID of who pressed the button
             String eventUserID = event.getUser().getId();
 
-            //For the course command - if the user didn't press the same button within 30 seconds, the task executes and the user gets added to the cooldown after.
+            //For the search command - if the user didn't press the same button within 30 seconds, the task executes and the user gets added to the cooldown afterwards.
             //Otherwise, they get a message saying to wait until 30 seconds has passed since the initial button press.
             if (pressedArgs[2].equals("courseSearch")) {
                 if (!BuckyTheBadgerBot.coolDownChecker.containsKey(eventUserID + ":" + pressedArgs[1] + ":" + pressedArgs[3])
                         || System.currentTimeMillis() > BuckyTheBadgerBot.coolDownChecker.get(eventUserID + ":" + pressedArgs[1] + ":" + pressedArgs[3]) + 30000) {
                     long startTime = System.nanoTime();
-                    event.deferReply().queue();
-                    ArrayList<String> courseSearch;
-                    ArrayList<String> courseInformation;
-                    String averageGPA;
-                    courseSearch = bot.madGradesClient.courseLookUp(event.getButton().getLabel());
-                    if (!courseSearch.isEmpty()) {
-                        averageGPA = bot.madGradesClient.courseAverageGPA(courseSearch.get(0));
-                        courseInformation = Scraper.scrapeCourse(courseSearch.get(1), courseSearch.get(3));
-                        if (!courseInformation.isEmpty()) {
-                            EmbedBuilder eb = new EmbedBuilder()
-                                    .setTitle(courseInformation.get(0))
-                                    .setColor(Color.RED)
-                                    .setDescription((courseInformation.get(2).replaceAll("replace", " ")))
-                                    .addField("Cumulative GPA", String.valueOf(averageGPA), false)
-                                    .addField("Credits", courseInformation.get(1), false)
-                                    .addField("Requisites", courseInformation.get(3), false)
-                                    .addField("Course Designation", courseInformation.get(4).replaceAll("replace", "\n"), false)
-                                    .addField("Repeatable For Credit", courseInformation.get(5), false)
-                                    .addField("Last Taught", courseInformation.get(6), false);
-                            long endTime = System.nanoTime();
-                            long duration = (endTime - startTime) / 1000000;
-                            eb.setFooter("This took " + duration + " ms to respond.");
-                            event.getHook().sendMessageEmbeds(eb.build()).queue();
-                        } else {
-                            event.getHook().sendMessage("Unable to find information on `" + courseSearch.get(3).toUpperCase() + " " + courseSearch.get(1) + " - " + courseSearch.get(4) + "`").queue();
-                        }
-                    } else {
-                        event.getHook().sendMessage("No courses found.").queue();
+                    String courseQuery = event.getButton().getLabel();
+                    String sqlQuery = "SELECT * FROM courses WHERE crosslists_with_number LIKE '" + courseQuery + "';";
+                    try {
+                        List<Course> courses = bot.getDatabase().getRepository("courses").read(sqlQuery);
+                        Course result = courses.get(0);
+                        EmbedBuilder eb = new EmbedBuilder()
+                                .setTitle(result.getCrosslistedSubjectsWithNumber() + " — " +result.getTitle())
+                                .setColor(Color.RED)
+                                .setDescription(result.getDescription() != null ? result.getDescription() : "N/A")
+                                .addField("Cumulative GPA", result.getCumulativeGpa() != null ? result.getCumulativeGpa().toString() : "N/A", false)
+                                .addField("Credits", result.getCredits() != null ? result.getCredits() : "N/A", false)
+                                .addField("Requisites", result.getRequisites() != null ? result.getRequisites() : "N/A", false)
+                                .addField("Course Designation",result.getCourseDesignation() != null ? result.getCourseDesignation() : "N/A", false)
+                                .addField("Repeatable For Credit", result.getRepeatable() != null ? result.getRepeatable() : "N/A", false)
+                                .addField("Last Taught", result.getLastTaught() != null ? result.getLastTaught() : "N/A", false);
+                        long endTime = System.nanoTime();
+                        long duration = (endTime - startTime) / 1000000;
+                        eb.setFooter("This took " + duration + " ms to respond.");
+                        event.replyEmbeds(eb.build()).queue();
+                    } catch (Exception e) {
+                        logger.error("Could not fetch courses! {}",e.toString());
+                        event.reply("An error has occurred. Unable to fetch courses...").queue();
                     }
                     //Adds the user and the button they pressed to the cooldown
                     BuckyTheBadgerBot.coolDownChecker.put(eventUserID + ":" + pressedArgs[1] + ":" + pressedArgs[3], System.currentTimeMillis());
                 } else {
-                    event.reply("Stop spamming! You already selected `" + event.getButton().getLabel() + "` recently. Please wait 30 seconds....").setEphemeral(true).queue();
+                    event.reply("Stop spamming! You already selected `" + event.getButton().getLabel() + "` recently. Please wait 30 seconds...").setEphemeral(true).queue();
                 }
                 //Clean map of expired timestamps
                 //NOTE: Doing a while loop is faster than Collection.removeif by a few milliseconds since it only iterates through expired elements
@@ -124,7 +150,7 @@ public class ButtonListener extends ListenerAdapter {
                 //Check if the user requested the original menu
                 if (pressedArgs[0].equals(eventUserID)) {
                     //Update the buttons according to the pressed arg
-                    PaginationUtility.updatePaginationButtons(pressedArgs[0] + ":" + pressedArgs[1], pressedArgs[3], event);
+                    PaginationUtils.updatePaginationButtons(pressedArgs[0] + ":" + pressedArgs[1], pressedArgs[3], event);
                 } else {
                     event.reply("You didn't request this!").setEphemeral(true).queue();
                 }
@@ -142,7 +168,7 @@ public class ButtonListener extends ListenerAdapter {
                     event.reply("Select a course you want to see student ratings for:").addActionRow(menu).queue(interactionHook
                             -> {
                         Runnable task = () -> interactionHook.editOriginalComponents(ActionRow.of(menu).asDisabled()).queue();
-                        scheduledExecutor.schedule(task, 10, TimeUnit.MINUTES);
+                        BuckyTheBadgerBot.scheduledExecutor.schedule(task, 10, TimeUnit.MINUTES);
                     });
                     event.editButton(event.getButton().asDisabled()).queue();
 

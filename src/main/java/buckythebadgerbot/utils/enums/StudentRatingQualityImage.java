@@ -1,4 +1,4 @@
-package buckythebadgerbot.utility.enums;
+package buckythebadgerbot.utils.enums;
 
 /**
  * Enum class to store an image and hex color for every student rating imageUrl

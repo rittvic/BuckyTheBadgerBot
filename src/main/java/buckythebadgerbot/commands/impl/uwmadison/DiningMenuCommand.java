@@ -1,9 +1,9 @@
-package buckythebadgerbot.commands.uwmadison;
+package buckythebadgerbot.commands.impl.uwmadison;
 
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
-import buckythebadgerbot.utility.enums.DiningMenuImage;
-import buckythebadgerbot.utility.pagination.PaginationUtility;
+import buckythebadgerbot.utils.enums.DiningMenuImage;
+import buckythebadgerbot.utils.pagination.PaginationUtils;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
@@ -68,12 +68,12 @@ public class DiningMenuCommand extends Command {
 
             if ((menuType.equals("lowell-dining-daily")) &&  !((diningMarket.equals("four-lakes-market")) || (diningMarket.equals("gordon-avenue-market")))){
                 event.reply("`" + diningMarketArg.split("-0")[1] + " - " + menuTypeArg.split("-0")[1] +
-                        "`" + "is an invalid option (does not exist)!").setEphemeral(true).queue();
+                        "`" + " is not a valid option (doesn't exist).").setEphemeral(true).queue();
                 return;
             }
 
             long startTime = System.nanoTime();
-            HashMap<String,String> stations = bot.client.diningMenuLookup(diningMarket,menuType);
+            HashMap<String,String> stations = bot.diningMenuClient.getDiningMenu(diningMarket,menuType);
             long endTime = System.nanoTime();
             long duration = (endTime - startTime) / 1000000;
             //Get embeds in pagination menu
@@ -83,7 +83,7 @@ public class DiningMenuCommand extends Command {
                 //Send a paginated menu
                 ReplyCallbackAction action = event.replyEmbeds(diningMenuEmbeds.get(0));
                 if (diningMenuEmbeds.size() > 1){
-                    PaginationUtility.sendPaginatedMenu(event.getUser().getId(), action, diningMenuEmbeds);
+                    PaginationUtils.sendPaginatedMenu(event.getUser().getId(), action, diningMenuEmbeds);
                     return;
                 }
                 action.queue();
@@ -114,7 +114,6 @@ public class DiningMenuCommand extends Command {
 
             while (iterator.hasNext()) {
                 Map.Entry<String, String> entry = iterator.next();
-                //If the entry value is null, continue onto the next iteration
                 if (entry.getValue() == null) {
                     continue;
                 }
@@ -126,8 +125,8 @@ public class DiningMenuCommand extends Command {
                     embed = new EmbedBuilder()
                             .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
                             .setThumbnail(thumbnail.url)
-                            .setFooter(LocalDateTime.now(TimeZone.getTimeZone("US/Central").toZoneId()).format(DateTimeFormatter.ofPattern("MM/dd/uuuu • h:mm a"))
-                                    + " (US Central Time)" + "\n" + "This took " + duration + " ms to respond.")
+                            .setFooter("This took " + duration + " ms to respond." + " " + LocalDateTime.now(TimeZone.getTimeZone("US/Central").toZoneId()).format(DateTimeFormatter.ofPattern("MM/dd/uuuu at h:mm a"))
+                                    + " (US Central Time)")
                             .setColor(Color.red);
 
                 }

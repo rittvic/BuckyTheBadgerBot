@@ -1,18 +1,15 @@
-package buckythebadgerbot.commands.utility;
+package buckythebadgerbot.commands.impl.utility;
 
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
 import buckythebadgerbot.commands.CommandManager;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
-import net.dv8tion.jda.api.interactions.commands.build.Commands;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -36,8 +33,7 @@ public class HelpCommand extends Command {
             EmbedBuilder eb = new EmbedBuilder()
                     .setTitle("Help Menu")
                     .setColor(Color.red)
-                    .setDescription("The slash commands:")
-                    .setFooter("Unable to find a particular course? Blame madgrades api for being outdated. I might work on something of my own to fix this.");
+                    .setDescription("The slash commands:");
 
             CommandManager.commands.forEach(command -> {
                 if (!command.name.equals("help")) {

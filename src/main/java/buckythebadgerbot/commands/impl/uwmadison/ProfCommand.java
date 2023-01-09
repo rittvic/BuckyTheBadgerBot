@@ -1,16 +1,15 @@
-package buckythebadgerbot.commands.uwmadison;
+package buckythebadgerbot.commands.impl.uwmadison;
 
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
 import buckythebadgerbot.listeners.StringSelectListener;
-import buckythebadgerbot.pojo.ratemyprofessors.Professor;
-import buckythebadgerbot.pojo.ratemyprofessors.StudentRating;
+import buckythebadgerbot.data.Professor;
+import buckythebadgerbot.data.StudentRating;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
-import net.dv8tion.jda.api.interactions.components.ActionRow;
 import net.dv8tion.jda.api.interactions.components.buttons.Button;
 import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.utils.messages.MessageCreateBuilder;
@@ -18,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -61,7 +59,7 @@ public class ProfCommand extends Command {
             String profName = Objects.requireNonNull(event.getOption("prof")).getAsString();
 
             //Assigns the Professor instance to the results of the HTTP request
-            Professor prof = bot.rateMyProfessorClient.profLookup(profName);
+            Professor prof = bot.rateMyProfessorClient.getProf(profName);
 
             if (prof.getDoesExist() && !prof.getFallback()) {
                 StringBuilder topTags = new StringBuilder();
@@ -140,7 +138,6 @@ public class ProfCommand extends Command {
         for (int i = 0; i < ratings.size(); i++) {
             EmbedBuilder embed = new EmbedBuilder()
                     .setTitle(ratings.get(i).getCourse() + " - " + " Student Rating (" + (i + 1) + "/" + ratings.size() + ")")
-                    //.setAuthor("This rating was written on "+ "<t:"+ratings.get(i).getDate()+":f>")
                     .setDescription("This rating was written on " + "<t:" + ratings.get(i).getDate() + ":f>")
                     .setColor(Color.decode(ratings.get(i).getRatingQuality().hexColor))
                     .addField("Professor", profName, false)

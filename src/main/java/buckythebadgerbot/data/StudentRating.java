@@ -1,6 +1,6 @@
-package buckythebadgerbot.pojo.ratemyprofessors;
+package buckythebadgerbot.data;
 
-import buckythebadgerbot.utility.enums.StudentRatingQualityImage;
+import buckythebadgerbot.utils.enums.StudentRatingQualityImage;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 

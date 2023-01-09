@@ -1,4 +1,4 @@
-package buckythebadgerbot.pojo.ratemyprofessors;
+package buckythebadgerbot.data;
 
 import java.util.List;
 

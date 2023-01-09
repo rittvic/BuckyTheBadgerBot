@@ -1,7 +1,7 @@
 package buckythebadgerbot.commands;
 import buckythebadgerbot.BuckyTheBadgerBot;
-import buckythebadgerbot.commands.utility.HelpCommand;
-import buckythebadgerbot.commands.uwmadison.*;
+import buckythebadgerbot.commands.impl.utility.HelpCommand;
+import buckythebadgerbot.commands.impl.uwmadison.*;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
