@@ -25,8 +25,7 @@ services:
 
   discord-bot:
     container_name: buckythebadgerbot-app
-    # replace this with the image from your own github package registry :)
-    image: testbotimage:latest
+    image: ghcr.io/rittvic/buckythebadgerbot:latest
     restart: on-failure
     depends_on:
       database:
