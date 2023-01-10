@@ -50,7 +50,7 @@ public class ButtonListener extends ListenerAdapter {
      * @param buttonStyle the specified style of each Button
      * @param action the original event that called for the button generation
      */
-    public static void generateButtons(String uuid, String buttonArgument, ArrayList<String> buttonLabels, ButtonStyle buttonStyle, ReplyCallbackAction action) {
+    public static void generateButtons(String uuid, String buttonArgument, ArrayList<String> buttonIds, ArrayList<String> buttonLabels, ButtonStyle buttonStyle, ReplyCallbackAction action) {
         if (buttonLabels.size() > 25) {
             throw new IllegalArgumentException("Cannot have more than 25 buttons!");
         }
@@ -62,7 +62,8 @@ public class ButtonListener extends ListenerAdapter {
             for (int j = 0; j < 5; j++) {
                 if (!buttonLabels.isEmpty()) {
                     String buttonLabel = buttonLabels.remove(0);
-                    buttonsRow.add(Button.of(buttonStyle,uuid + ":" + buttonArgument + ":" + buttonLabel, buttonLabel));
+                    String buttonId = buttonIds.remove(0);
+                    buttonsRow.add(Button.of(buttonStyle,uuid + ":" + buttonArgument + ":" + buttonId, buttonLabel));
                 } else {
                     break;
                 }
@@ -109,21 +110,26 @@ public class ButtonListener extends ListenerAdapter {
                 if (!BuckyTheBadgerBot.coolDownChecker.containsKey(eventUserID + ":" + pressedArgs[1] + ":" + pressedArgs[3])
                         || System.currentTimeMillis() > BuckyTheBadgerBot.coolDownChecker.get(eventUserID + ":" + pressedArgs[1] + ":" + pressedArgs[3]) + 30000) {
                     long startTime = System.nanoTime();
-                    String courseQuery = event.getButton().getLabel();
-                    String sqlQuery = "SELECT * FROM courses WHERE crosslists_with_number LIKE '" + courseQuery + "';";
+                    String courseQuery = pressedArgs[3];
+                    //E.g. COMP SCI-T300
+                    String[] courseQueryArgs = courseQuery.split("-T");
+                    String sqlQuery = "SELECT * FROM courses WHERE subject_abbrev = '" + courseQueryArgs[0] + "' AND number = '" + courseQueryArgs[1] + "';";
                     try {
                         List<Course> courses = bot.getDatabase().getRepository("courses").read(sqlQuery);
                         Course result = courses.get(0);
                         EmbedBuilder eb = new EmbedBuilder()
-                                .setTitle(result.getCrosslistedSubjectsWithNumber() + " — " +result.getTitle())
+                                .setTitle(result.getSubjectAbbrev() + " " + result.getNumber() + " — " +result.getTitle())
                                 .setColor(Color.RED)
-                                .setDescription(result.getDescription() != null ? result.getDescription() : "N/A")
                                 .addField("Cumulative GPA", result.getCumulativeGpa() != null ? result.getCumulativeGpa().toString() : "N/A", false)
-                                .addField("Credits", result.getCredits() != null ? result.getCredits() : "N/A", false)
-                                .addField("Requisites", result.getRequisites() != null ? result.getRequisites() : "N/A", false)
-                                .addField("Course Designation",result.getCourseDesignation() != null ? result.getCourseDesignation() : "N/A", false)
-                                .addField("Repeatable For Credit", result.getRepeatable() != null ? result.getRepeatable() : "N/A", false)
-                                .addField("Last Taught", result.getLastTaught() != null ? result.getLastTaught() : "N/A", false);
+                                .addField("Credits", result.getCredits() != null ? result.getCredits() : "None", false)
+                                .addField("Requisites", result.getRequisites() != null ? result.getRequisites() : "None", false)
+                                .addField("Course Designation",result.getCourseDesignation() != null ? result.getCourseDesignation() : "None", false)
+                                .addField("Repeatable For Credit", result.getRepeatable() != null ? result.getRepeatable() : "None", false)
+                                .addField("Last Taught", result.getLastTaught() != null ? result.getLastTaught() : "None", false)
+                                .addField("Cross-listed Subjects", result.getCrosslistSubjects() != null ? result.getCrosslistSubjects() + " " + result.getNumber() : "None", false);
+                        if (result.getDescription() != null) {
+                            eb.setDescription(result.getDescription());
+                        }
                         long endTime = System.nanoTime();
                         long duration = (endTime - startTime) / 1000000;
                         eb.setFooter("This took " + duration + " ms to respond.");

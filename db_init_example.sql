@@ -8,7 +8,8 @@
 --   title text NOT NULL,
 --   cumulative_gpa decimal NULL,
 --   credits text NULL,
+--   AND SO ON...
 --  );
 
 -- You can then insert multiple records into the table here
--- Additionally, you can install extensions, as well as build indexes for fast full text searching
+-- Additionally, you can install extensions (like pg_trgm for trigrams), as well as build indexes for fast full text searching

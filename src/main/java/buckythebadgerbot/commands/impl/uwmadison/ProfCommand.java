@@ -30,18 +30,18 @@ public class ProfCommand extends Command {
     public ProfCommand(BuckyTheBadgerBot bot) {
         super(bot);
         this.name = "professor";
-        this.description = "Display professor information";
+        this.description = "Search for a professor";
         this.explanation = """
                  `e.g., <Hobbes>, <Boya Wen>, <Vermillion>`
-                 Searches for a professor and displays the following information:\s
+                 Searches for a professor and displays the following information (in order):\s
                  - Department
                  - Average Rating
                  - Total Ratings
-                 - Would Take Again
+                 - Would Take Again Percentage
                  - Top Tags
-                 - Courses Taught
-                 Can also view student ratings for every course taught by the professor.""";
-        this.args.add(new OptionData(OptionType.STRING, "prof", "Professor name", true));
+                 - Top Courses Taught
+                 You can also view student ratings for every course taught by the professor.""";
+        this.args.add(new OptionData(OptionType.STRING, "professor", "Professor's name", true));
 
     }
 

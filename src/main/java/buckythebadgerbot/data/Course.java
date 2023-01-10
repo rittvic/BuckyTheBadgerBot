@@ -1,10 +1,13 @@
 package buckythebadgerbot.data;
 
+/**
+ * Course object (DTO) for storing Courses table results from DB
+ */
 public class Course {
 
-    private String crosslistedSubjectsWithNumber;
     private String subjectAbbrev;
     private String fullSubjectName;
+    private String crosslistSubjects;
     private String number;
     private String title;
     private String description;
@@ -15,16 +18,16 @@ public class Course {
     private String repeatable;
     private String lastTaught;
 
-    public void setCrosslistedSubjectsWithNumber(String crosslistedSubjectsWithNumber) {
-        this.crosslistedSubjectsWithNumber = crosslistedSubjectsWithNumber;
-    }
-
     public void setSubjectAbbrev(String subjectAbbrev) {
         this.subjectAbbrev = subjectAbbrev;
     }
 
     public void setFullSubjectName(String fullSubjectName) {
         this.fullSubjectName = fullSubjectName;
+    }
+
+    public void setCrosslistSubjects(String crosslistSubjects) {
+        this.crosslistSubjects = crosslistSubjects;
     }
 
     public void setNumber(String number) {
@@ -63,16 +66,16 @@ public class Course {
         this.lastTaught = lastTaught;
     }
 
-    public String getCrosslistedSubjectsWithNumber() {
-        return crosslistedSubjectsWithNumber;
-    }
-
     public String getSubjectAbbrev() {
         return subjectAbbrev;
     }
 
     public String getFullSubjectName() {
         return fullSubjectName;
+    }
+
+    public String getCrosslistSubjects() {
+        return crosslistSubjects;
     }
 
     public String getNumber() {
@@ -114,9 +117,9 @@ public class Course {
     @Override
     public String toString() {
         return "Course{" +
-                "crosslistedSubjectsWithNumber='" + crosslistedSubjectsWithNumber + '\'' +
-                ", subjectAbbrev='" + subjectAbbrev + '\'' +
+                "subjectAbbrev='" + subjectAbbrev + '\'' +
                 ", fullSubjectName='" + fullSubjectName + '\'' +
+                ", crosslistSubjects='" + crosslistSubjects + '\'' +
                 ", number='" + number + '\'' +
                 ", title='" + title + '\'' +
                 ", description='" + description + '\'' +

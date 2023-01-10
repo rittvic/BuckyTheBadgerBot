@@ -30,18 +30,19 @@ public class CoursesRepository extends Repository<Course> {
             while (rs.next()) {
                 Course course = new Course();
                 //NOTE: PostgreSQL uses 1-indexed for some reason...
-                course.setCrosslistedSubjectsWithNumber(rs.getString(1));
-                course.setSubjectAbbrev(rs.getString(2));
-                course.setFullSubjectName(rs.getString(3));
-                course.setNumber(rs.getString(4));
-                course.setTitle(rs.getString(5));
-                course.setCumulativeGpa(rs.getDouble(6));
-                course.setCredits(rs.getString(7));
-                course.setDescription(rs.getString(8));
-                course.setRequisites(rs.getString(9));
-                course.setCourseDesignation(rs.getString(10));
-                course.setRepeatable(rs.getString(11));
-                course.setLastTaught(rs.getString(12));
+                course.setSubjectAbbrev(rs.getString(1));
+                course.setFullSubjectName(rs.getString(2));
+                course.setNumber(rs.getString(3));
+                course.setTitle(rs.getString(4));
+                //Null decimal values get auto-converted to 0.0, so we have to manually set it to null if it is actually null by checking with Object type
+                course.setCumulativeGpa(rs.getObject(5) == null ? null : rs.getDouble(5));
+                course.setCredits(rs.getString(6));
+                course.setDescription(rs.getString(7));
+                course.setRequisites(rs.getString(8));
+                course.setCourseDesignation(rs.getString(9));
+                course.setRepeatable(rs.getString(10));
+                course.setLastTaught(rs.getString(11));
+                course.setCrosslistSubjects(rs.getString(12));
                 courses.add(course);
             }
             return courses;

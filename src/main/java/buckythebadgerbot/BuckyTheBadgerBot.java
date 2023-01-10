@@ -113,7 +113,7 @@ public class BuckyTheBadgerBot {
         try {
             BuckyTheBadgerBot bot = new BuckyTheBadgerBot();
         } catch (LoginException | SQLException e){
-            logger.error("Something went with registering the bot! {}", e.toString());
+            logger.error("Something went wrong with registering the bot! {}", e.toString());
         }
     }
 }

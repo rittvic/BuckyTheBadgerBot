@@ -33,12 +33,13 @@ public class SearchCommand extends Command {
     public SearchCommand(BuckyTheBadgerBot bot) {
         super(bot);
         this.name = "search";
-        this.description = "Queries courses and displays the top results";
+        this.description = "Queries the courses and displays the top ten results";
         this.explanation = """
                 `e.g., <Calculus>, <Amer Ind>, <Math 340>, <500>`\s
-                Queries through the courses and finds the best matches. It then generates buttons for each result.
-                NOTE: Cross-listed course querying is not currently supported (i.e. COMP SCI/MATH 240)""";
-        this.args.add(new OptionData(OptionType.STRING, "query", "Search for courses", true));
+                Queries courses based on the user input and returns the best matches. You can click on every result through the generated buttons.
+                NOTE: Cross-listed course querying is currently not supported (e.g., "COMP SCI/MATH 240").
+                Additionally, abbreviated subject querying may not work as intended (e.g., "CS 240")""";
+        this.args.add(new OptionData(OptionType.STRING, "query", "Search for courses by subject, number, and/or title", true));
     }
 
     /**
@@ -53,7 +54,6 @@ public class SearchCommand extends Command {
             long startTime = System.nanoTime();
             String uuid = event.getUser().getId() + ":" + UUID.randomUUID();
             String courseQuery = event.getOption("query").getAsString();
-            //TODO: maybe don't allow duplicate values in title column? while maintaining the sorting algos
             String sqlQuery = "SELECT *," +
                     " ts_rank_cd(full_subject_name_number_idx_col, query) AS rank_full," +
                     " ts_rank_cd(subject_abbrev_number_idx_col, query) AS rank_abbrev," +
@@ -69,22 +69,24 @@ public class SearchCommand extends Command {
                 if (!courses.isEmpty()) {
                     StringBuilder results = new StringBuilder();
                     ArrayList<String> buttonResults = new ArrayList<>();
+                    ArrayList<String> buttonIds = new ArrayList<>();
                     for (Course course : courses) {
-                        results.append("`").append(course.getCrosslistedSubjectsWithNumber()).append(" — ").append(course.getTitle()).append("`").append("\n");
-                        buttonResults.add(course.getCrosslistedSubjectsWithNumber());
+                        results.append("`").append(course.getSubjectAbbrev()).append(" ").append(course.getNumber()).append(" — ").append(course.getTitle()).append("`").append("\n");
+                        buttonIds.add(course.getSubjectAbbrev() + "-T" + course.getNumber());
+                        buttonResults.add(course.getSubjectAbbrev() + " " + course.getNumber());
                     }
                     EmbedBuilder eb = new EmbedBuilder()
                             .setTitle("Query: " + courseQuery)
                             .setColor(Color.red)
                             .addField("Results: ", results.toString(), false)
-                            .setDescription(courses.size() == 10 ? "Showing the first 10 results" : "Showing all " + courses.size() + " results.");
+                            .setDescription(courses.size() == 10 ? "Showing the first 10 results." : "Showing all " + courses.size() + " results.");
                     long endTime = System.nanoTime();
                     long duration = (endTime - startTime) / 1000000;
                     eb.setFooter("This took " + duration + " ms to respond.");
                     MessageCreateBuilder message = new MessageCreateBuilder();
                     message.addEmbeds(eb.build());
                     ReplyCallbackAction action = event.reply(message.build());
-                    ButtonListener.generateButtons(uuid,"courseSearch",buttonResults,ButtonStyle.SECONDARY, action);
+                    ButtonListener.generateButtons(uuid,"courseSearch", buttonIds, buttonResults,ButtonStyle.SECONDARY, action);
                 } else {
                     event.reply("No results found. Try to be more specific.").queue();
                 }

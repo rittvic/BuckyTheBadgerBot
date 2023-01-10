@@ -29,18 +29,18 @@ public class DiningMenuCommand extends Command {
     public DiningMenuCommand(BuckyTheBadgerBot bot) {
         super(bot);
         this.name = "diningmenu";
-        this.description = "Display dining menu";
+        this.description = "Check today's menu for a dining market";
         this.explanation = """
                  `e.g., <Rheta's Market> <Breakfast>, <Gordon Avenue Market> <Lunch>, <Four Lakes Market> <Dinner>`\s
-                 Display a dining menu consisting of every station and its food items within every category""";
-        this.args.add(new OptionData(OptionType.STRING, "dining-market", "choose a dining market", true)
+                 Displays today's dining menu (breakfast, lunch, dinner, or daily) consisting of every food station and its servings, for any one of the six dining markets.""";
+        this.args.add(new OptionData(OptionType.STRING, "dining-market", "Dining market", true)
                 .addChoice("Rheta's Market","rhetas-market-0Rheta's Market")
                 .addChoice("Gordon Avenue Market","gordon-avenue-market-0Gordon Avenue Market")
                 .addChoice("Lowell Market","lowell-market-0Lowell Market")
                 .addChoice("Liz's Market","lizs-market-0Liz's Market")
                 .addChoice("Carson's Market","carsons-market-0Carson's Market")
                 .addChoice("Four Lakes Market","four-lakes-market-0Four Lakes Market"));
-        this.args.add(new OptionData(OptionType.STRING, "menu", "choose a menu", true)
+        this.args.add(new OptionData(OptionType.STRING, "menu", "Menu", true)
                 .addChoice("Breakfast","breakfast-0Breakfast")
                 .addChoice("Lunch","lunch-0Lunch")
                 .addChoice("Dinner","dinner-0Dinner")
@@ -56,7 +56,6 @@ public class DiningMenuCommand extends Command {
     public void execute(SlashCommandInteractionEvent event) {
         CompletableFuture.runAsync(() -> {
             logger.info("Executing {}", DiningMenuCommand.class.getSimpleName());
-
             //Obtain the argument (value) of the dining market choice
             String diningMarketArg = event.getOption("dining-market").getAsString();
             //Get the chosen dining market
@@ -66,7 +65,7 @@ public class DiningMenuCommand extends Command {
             //Get the chosen menu type
             String menuType = menuTypeArg.split("-0")[0];
 
-            if ((menuType.equals("lowell-dining-daily")) &&  !((diningMarket.equals("four-lakes-market")) || (diningMarket.equals("gordon-avenue-market")))){
+            if ((menuType.equals("lowell-dining-daily")) && !((diningMarket.equals("four-lakes-market")) || (diningMarket.equals("gordon-avenue-market")))){
                 event.reply("`" + diningMarketArg.split("-0")[1] + " - " + menuTypeArg.split("-0")[1] +
                         "`" + " is not a valid option (doesn't exist).").setEphemeral(true).queue();
                 return;
@@ -89,7 +88,7 @@ public class DiningMenuCommand extends Command {
                 action.queue();
             } else{
                 event.reply("`" + diningMarketArg.split("-0")[1] + " - " + menuTypeArg.split("-0")[1] + "`" +
-                        " is not offered today!").queue();
+                        " is not offered today.").queue();
             }
         }, bot.service);
     }

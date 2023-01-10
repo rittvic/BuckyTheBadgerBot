@@ -23,10 +23,11 @@ public class CourseCommand extends Command {
     public CourseCommand(BuckyTheBadgerBot bot) {
         super(bot);
         this.name = "course";
-        this.description = "Display course information";
+        this.description = "Search for a course";
         this.explanation = """
                 `e.g., <COMP SCI 577>, <Biology>, <102>, <Machine Learning>`
-                 Searches for the specified course (or the top result) and displays the following information:\s
+                Searches for the specified course (or the top result) and displays the following information (in order):\s
+                 - Course Subject, Number and Title
                  - Course Description
                  - Cumulative GPA
                  - Credits
@@ -34,9 +35,10 @@ public class CourseCommand extends Command {
                  - Course Designation
                  - Repeatable For Credit
                  - Last Taught
-                 NOTE: The cumulative gpa for cross-listed courses are combined since the individual courses may not have its own cumulative gpa.
-                 Additionally, cross-listed course querying is not currently supported (i.e. COMP SCI/MATH 240)""";
-        this.args.add(new OptionData(OptionType.STRING, "course", "Course subject and number and/or title", true));
+                 - Cross-listed Subjects (if any)
+                NOTE: Cross-listed course querying is currently not supported (e.g., "COMP SCI/MATH 240").
+                Additionally, abbreviated subject querying may not work as intended (e.g., "CS 240")""";
+        this.args.add(new OptionData(OptionType.STRING, "course", "Course subject and number, and/or title", true));
     }
 
     /**
@@ -65,15 +67,18 @@ public class CourseCommand extends Command {
                 if (!courses.isEmpty()) {
                     Course result = courses.get(0);
                     EmbedBuilder eb = new EmbedBuilder()
-                            .setTitle(result.getCrosslistedSubjectsWithNumber() + " — " +result.getTitle())
+                            .setTitle(result.getSubjectAbbrev() + " " + result.getNumber() + " — " +result.getTitle())
                             .setColor(Color.RED)
-                            .setDescription(result.getDescription() != null ? result.getDescription() : "N/A")
                             .addField("Cumulative GPA", result.getCumulativeGpa() != null ? result.getCumulativeGpa().toString() : "N/A", false)
-                            .addField("Credits", result.getCredits() != null ? result.getCredits() : "N/A", false)
-                            .addField("Requisites", result.getRequisites() != null ? result.getRequisites() : "N/A", false)
-                            .addField("Course Designation",result.getCourseDesignation() != null ? result.getCourseDesignation() : "N/A", false)
-                            .addField("Repeatable For Credit", result.getRepeatable() != null ? result.getRepeatable() : "N/A", false)
-                            .addField("Last Taught", result.getLastTaught() != null ? result.getLastTaught() : "N/A", false);
+                            .addField("Credits", result.getCredits() != null ? result.getCredits() : "None", false)
+                            .addField("Requisites", result.getRequisites() != null ? result.getRequisites() : "None", false)
+                            .addField("Course Designation",result.getCourseDesignation() != null ? result.getCourseDesignation() : "None", false)
+                            .addField("Repeatable For Credit", result.getRepeatable() != null ? result.getRepeatable() : "None", false)
+                            .addField("Last Taught", result.getLastTaught() != null ? result.getLastTaught() : "None", false)
+                            .addField("Cross-listed Subjects", result.getCrosslistSubjects() != null ? result.getCrosslistSubjects() + " " + result.getNumber() : "None", false);
+                    if (result.getDescription() != null) {
+                        eb.setDescription(result.getDescription());
+                    }
                     long endTime = System.nanoTime();
                     long duration = (endTime - startTime) / 1000000;
                     eb.setFooter("This took " + duration + " ms to respond.");
