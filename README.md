@@ -1,7 +1,7 @@
 # BuckyTheBadger Bot
 A Discord bot to search for courses, professors, and other information at UW-Madison.
 
-## [Invite Bot To Your Server](https://discord.com/api/oauth2/authorize?client_id=990494786123333682&permissions=139586751552&scope=bot%20applications.commands)
+### [Invite The Bot To Your Server](https://discord.com/api/oauth2/authorize?client_id=990494786123333682&permissions=139586751552&scope=bot%20applications.commands)
 It needs permissions to read and send messages, use slash commands, and send embed links; and most importantly, it also needs application commands scope permission to register slash commands.
 
 ### Commands
@@ -59,6 +59,9 @@ Displays today's dining menu (breakfast, lunch, dinner, or daily) consisting of 
 ## Development & Local Testing
 To get a local copy of the bot up and running for development and testing purposes, see below:
 
+<b> Note: As of now, you are not able to test with the grade distribution graphs (which aren't necessary for testing purposes).
+This may change in the future once I set up an image file server for it (represented as .pngs).</b>
+
 ### Prerequisites
 1. [Docker](https://www.docker.com/) - This is used to containerize both the bot and the database, which makes it easy for setup.
 #### If you want to test without Docker:
@@ -74,11 +77,10 @@ git clone https://github.com/rittvic/BuckyTheBadgerBot.git
 
 2. Edit the following configuration files (as necessary):
    * <b>.env</b> - Put your token variables here. Use `.env.example` as reference.
-   * <b>db_init.sql</b> (optional) - This is for seeding the database. Use `db_init_example.sql` as reference.
-   However, I may release my tool for this in the future.
+   * <b>db_init.sql</b> (optional) - This is for seeding the database. Use `db_init_example.sql` as reference (I may release my tool for this in the future).
    > This is marked as optional because the bot can still function without the database, but the commands that rely on it won't work obviously.
 
-   * <b>docker-compose-yml</b> - Set the path to your docker image of the bot here, as well as the initialization script if you are using the database.
+   * <b>docker-compose-yml</b> (if using Docker) - Set the path to your docker image of the bot here, as well as the initialization script if you are using the database.
 
 ### With Docker
 3. After making changes, build a docker image of the bot by running `docker build -t <image-name>:<tag> <path to Dockerfile>` (if in the same path, you can use `.` instead). 
@@ -101,7 +103,7 @@ If you would like to contribute, whether it is a suggestion or bug fix, please f
 ## Built With
 * [Java Discord API (JDA)](https://github.com/DV8FromTheWorld/JDA) - a Java wrapper for the Discord API
 * [Jackson](https://github.com/FasterXML/jackson) - High-performance Java library to parse and serialize/deserialize JSON
-* [PostgreSQL](https://www.postgresql.org/) and [PostgreSQL JDBC Driver](https://jdbc.postgresql.org) - a SQL relational database management system powered by JDBC to allow Java programs to connect to the database.
+* [PostgreSQL](https://www.postgresql.org/) and [PostgreSQL JDBC Driver](https://jdbc.postgresql.org) - a SQL relational database management system powered by JDBC (allows Java programs to connect to the database)
 * [HikariCP](https://github.com/brettwooldridge/HikariCP) - Lightweight, fast JDBC connection pooling framework
 * [Docker](https://www.docker.com/) - Software containerization platform
 * [Dotenv](https://github.com/cdimascio/dotenv-java) - Module to load environment variables
@@ -110,6 +112,8 @@ If you would like to contribute, whether it is a suggestion or bug fix, please f
 
 ## Where I Get The Information From
 * [guide.wisc.edu](https://guide.wisc.edu)
+* [registrar.wisc.edu](https://registrar.wisc.edu)
+* [wisc-housingdining.nutrislice.com](https://wisc-housingdining.nutrislice.com/menu/)
 * [ratemyprofessors.com](https://www.ratemyprofessors.com)
 
 ## License
