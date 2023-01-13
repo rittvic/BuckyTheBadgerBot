@@ -82,11 +82,11 @@ git clone https://github.com/rittvic/BuckyTheBadgerBot.git
 
    * <b>docker-compose-yml</b> (if using Docker) - Set the path to your docker image of the bot here, as well as the initialization script if you are using the database.
 
-### With Docker
+#### With Docker
 3. After making changes, build a docker image of the bot by running `docker build -t <image-name>:<tag> <path to Dockerfile>` (if in the same path, you can use `.` instead). 
 4. Run `docker compose up` to see the bot (and database) in action.
 
-### Without Docker
+#### Without Docker
 if you are not using Docker, then after making changes, you will need to create a .JAR file of the bot, and have the database up and running on your machine.
 Make sure you are using the same database configuration tokens set in `.env`. 
 
