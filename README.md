@@ -79,14 +79,15 @@ git clone https://github.com/rittvic/BuckyTheBadgerBot.git
    * <b>.env</b> - Put your token variables here. Use `.env.example` as reference.
    * <b>db_init.sql</b> (optional) - This is for seeding the database. Use `db_init_example.sql` as reference (I may release my tool for this in the future).
    > This is marked as optional because the bot can still function without the database, but the commands that rely on it won't work obviously.
-
    * <b>docker-compose-yml</b> (if using Docker) - Set the path to your docker image of the bot here, as well as the initialization script if you are using the database.
 
-#### With Docker
-3. After making changes, build a docker image of the bot by running `docker build -t <image-name>:<tag> <path to Dockerfile>` (if in the same path, you can use `.` instead). 
-4. Run `docker compose up` to see the bot (and database) in action.
+<b>  With Docker </b>
 
-#### Without Docker
+3. After making changes, build a docker image of the bot by running `docker build -t <image-name>:<tag> <path to Dockerfile>` (if in the same path, you can use `.` instead). 
+4. Run `docker compose up` to see the bot and database in action.
+
+<b> Without Docker </b>
+
 if you are not using Docker, then after making changes, you will need to create a .JAR file of the bot, and have the database up and running on your machine.
 Make sure you are using the same database configuration tokens set in `.env`. 
 
@@ -112,7 +113,7 @@ If you would like to contribute, whether it is a suggestion or bug fix, please f
 
 ## Where I Get The Information From
 * [guide.wisc.edu](https://guide.wisc.edu)
-* [registrar.wisc.edu](https://registrar.wisc.edu)
+* [registrar.wisc.edu](https://www.registrar.wisc.edu)
 * [wisc-housingdining.nutrislice.com](https://wisc-housingdining.nutrislice.com/menu/)
 * [ratemyprofessors.com](https://www.ratemyprofessors.com)
 

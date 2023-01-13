@@ -18,8 +18,6 @@ public class Database {
     private static final HikariConfig config = new HikariConfig();
     private static HikariDataSource dataSource;
     private static final Logger logger = LoggerFactory.getLogger(Database.class);
-    private static final String CONTAINER_NAME = "buckythebadgerbot-db";
-    private static final String PORT = "5432";
     private static final Map<String, Repository> repositoriesMap = new HashMap<>();
 
     public Database(BuckyTheBadgerBot bot) {
@@ -31,7 +29,7 @@ public class Database {
     }
 
     public void connect() {
-        config.setJdbcUrl("jdbc:postgresql://" + CONTAINER_NAME + ":" + PORT + "/" + bot.getConfig().get("POSTGRES_DB"));
+        config.setJdbcUrl("jdbc:postgresql://" + bot.getConfig().get("POSTGRES_HOST") + ":" + bot.getConfig().get("POSTGRES_PORT") + "/" + bot.getConfig().get("POSTGRES_DB"));
         config.setUsername(bot.getConfig().get("POSTGRES_USER"));
         config.setPassword(bot.getConfig().get("POSTGRES_PASSWORD"));
         config.setDriverClassName("org.postgresql.Driver");
