@@ -13,11 +13,13 @@ import net.dv8tion.jda.api.interactions.components.buttons.ButtonStyle;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;
 import net.dv8tion.jda.api.interactions.components.selections.StringSelectMenu;
 import net.dv8tion.jda.api.requests.restaction.interactions.ReplyCallbackAction;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -134,6 +136,13 @@ public class ButtonListener extends ListenerAdapter {
                         long duration = (endTime - startTime) / 1000000;
                         eb.setFooter("This took " + duration + " ms to respond.");
                         event.replyEmbeds(eb.build()).queue();
+                        String graphImgName = result.getSubjectAbbrev().replaceAll(" ","_") + "-" + result.getNumber() + ".png";
+                        File gradeDistGraph = new File("./grade-dist-graphs" + File.separator + graphImgName);
+                        if (gradeDistGraph.exists()) {
+                            FileUpload uploadedGradeDistGraph = FileUpload.fromData(gradeDistGraph);
+                            eb.setImage("attachment://" + graphImgName);
+                            event.getHook().editOriginalEmbeds(eb.build()).setFiles(uploadedGradeDistGraph).queue();
+                        }
                     } catch (Exception e) {
                         logger.error("Could not fetch courses! {}",e.toString());
                         event.reply("An error has occurred. Unable to fetch courses...").queue();

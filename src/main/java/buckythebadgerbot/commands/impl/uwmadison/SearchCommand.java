@@ -23,8 +23,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Command that queries courses and displays the top ten (or all if less) results.
  * Generates buttons for the results, which you can click on to fetch the course information
- * Uses api.madgrades.com for queries
- * Calls from HTTPClient.java
+ * Uses Postgres db for queries
  */
 public class SearchCommand extends Command {
 
@@ -33,13 +32,13 @@ public class SearchCommand extends Command {
     public SearchCommand(BuckyTheBadgerBot bot) {
         super(bot);
         this.name = "search";
-        this.description = "Queries the courses and displays the top ten results";
+        this.description = "Query courses and see the top ten results";
         this.explanation = """
                 `e.g., <Calculus>, <Amer Ind>, <Math 340>, <500>`\s
                 Queries courses based on the user input and returns the best matches. You can click on every result through the generated buttons.
                 NOTE: Cross-listed course querying is currently not supported (e.g., "COMP SCI/MATH 240").
                 Additionally, abbreviated subject querying may not work as intended (e.g., "CS 240")""";
-        this.args.add(new OptionData(OptionType.STRING, "query", "Search for courses by subject, number, and/or title", true));
+        this.args.add(new OptionData(OptionType.STRING, "query", "Course subject, number, and/or title", true));
     }
 
     /**

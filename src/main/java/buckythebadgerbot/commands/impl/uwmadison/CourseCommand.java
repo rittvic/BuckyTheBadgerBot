@@ -1,22 +1,23 @@
 package buckythebadgerbot.commands.impl.uwmadison;
 
-import buckythebadgerbot.data.Course;
 import buckythebadgerbot.BuckyTheBadgerBot;
 import buckythebadgerbot.commands.Command;
+import buckythebadgerbot.data.Course;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
 import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.OptionData;
+import net.dv8tion.jda.api.utils.FileUpload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.awt.*;
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Command that retrieves information about a course from api.madgrades.com and guide.wisc.edu
- * Calls from HTTPClient.java and scrapes from Scraper.java
+ * Command that retrieves information of a course at UW-Madison
  */
 public class CourseCommand extends Command {
     private static final Logger logger = LoggerFactory.getLogger(CourseCommand.class);
@@ -83,11 +84,18 @@ public class CourseCommand extends Command {
                     long duration = (endTime - startTime) / 1000000;
                     eb.setFooter("This took " + duration + " ms to respond.");
                     event.replyEmbeds(eb.build()).queue();
+                    String graphImgName = result.getSubjectAbbrev().replaceAll(" ","_") + "-" + result.getNumber() + ".png";
+                    File gradeDistGraph = new File("./grade-dist-graphs" + File.separator + graphImgName);
+                    if (gradeDistGraph.exists()) {
+                        FileUpload uploadedGradeDistGraph = FileUpload.fromData(gradeDistGraph);
+                        eb.setImage("attachment://" + graphImgName);
+                        event.getHook().editOriginalEmbeds(eb.build()).setFiles(uploadedGradeDistGraph).queue();
+                    }
                 } else {
                     event.reply("No courses found. Try to be more specific.").queue();
                 }
             } catch (Exception e) {
-                logger.error("Could not fetch courses! {}",e.toString());
+                logger.error("Could not fetch courses!",e);
                 event.reply("An error has occurred. Unable to fetch courses...").queue();
             }
         }, bot.service);

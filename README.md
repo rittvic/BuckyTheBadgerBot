@@ -60,10 +60,10 @@ Displays today's dining menu (breakfast, lunch, dinner, or daily) consisting of 
 To get a local copy of the bot up and running for development and testing purposes, see below:
 
 ### Prerequisites
+1. [Docker](https://www.docker.com/) - This is used to containerize both the bot and the database, which makes it easy for setup.
+#### If you want to test without Docker:
 1. Latest version of [Java (need 18.0.2+)](https://www.oracle.com/java/technologies/downloads/)
-2. [Docker](https://www.docker.com/)
-   * This is used to containerize both the bot and the database, which makes it easy for setup.
-   Otherwise, you will have to install [PostgreSQL](https://www.postgresql.org/) on your local machine.
+2. [PostgreSQL](https://www.postgresql.org/) - This is the RDMS used in the bot
 
 ### Installation
 1. Clone the repo:
@@ -82,7 +82,7 @@ git clone https://github.com/rittvic/BuckyTheBadgerBot.git
 
 ### With Docker
 3. After making changes, build a docker image of the bot by running `docker build -t <image-name>:<tag> <path to Dockerfile>` (if in the same path, you can use `.` instead). 
-Then run `docker compose up` to see the bot (and database) in action.
+4. Run `docker compose up` to see the bot (and database) in action.
 
 ### Without Docker
 if you are not using Docker, then after making changes, you will need to create a .JAR file of the bot, and have the database up and running on your machine.

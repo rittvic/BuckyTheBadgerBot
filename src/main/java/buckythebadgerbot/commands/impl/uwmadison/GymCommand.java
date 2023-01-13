@@ -25,7 +25,7 @@ public class GymCommand extends Command {
     public GymCommand(BuckyTheBadgerBot bot) {
         super(bot);
         this.name = "gym";
-        this.description = "Display live usages for all gym equipments";
+        this.description = "Check live usages for all gym equipments";
         this.explanation = """
                 Displays live usages for every gym equipment at the Nicholas Recreation Center and the Shell.""";
     }
