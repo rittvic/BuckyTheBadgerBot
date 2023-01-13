@@ -56,11 +56,9 @@ public class ProfCommand extends Command {
             logger.info("Executing {}", ProfCommand.class.getSimpleName());
             long startTime = System.nanoTime();
             String uuid = event.getUser().getId() + ":" + UUID.randomUUID();
-            String profName = Objects.requireNonNull(event.getOption("prof")).getAsString();
-
+            String profName = Objects.requireNonNull(event.getOption("professor")).getAsString();
             //Assigns the Professor instance to the results of the HTTP request
             Professor prof = bot.rateMyProfessorClient.getProf(profName);
-
             if (prof.getDoesExist() && !prof.getFallback()) {
                 StringBuilder topTags = new StringBuilder();
                 StringBuilder coursesTaught = new StringBuilder();
