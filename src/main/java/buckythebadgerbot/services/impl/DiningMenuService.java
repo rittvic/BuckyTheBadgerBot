@@ -35,7 +35,6 @@ public class DiningMenuService extends APIService {
      * @return HashMap containing every food station and its sub-categories matching with all food items in the sub-category
      */
     public HashMap<String,String> getDiningMenu(String diningMarket, String menuType){
-
         //Get the current date in CST
         String date = "\"" + LocalDate.now(TimeZone.getTimeZone("US/Central").toZoneId()) + "\"";
 
@@ -66,6 +65,10 @@ public class DiningMenuService extends APIService {
                     day = dayOfWeek;
                     break;
                 }
+            }
+
+            if (day == null) {
+                System.out.println("day is null");
             }
 
             //LinkedHashMap in the format of {stationID-0stationName-0foodCategory = String containing all the items in the station and its category

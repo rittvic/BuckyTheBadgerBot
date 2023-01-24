@@ -124,8 +124,8 @@ public class DiningMenuCommand extends Command {
                     embed = new EmbedBuilder()
                             .setTitle(diningMarket + " - " + menuType + " Menu\n\n" + "Station: " + currentStation)
                             .setThumbnail(thumbnail.url)
-                            .setFooter("This took " + duration + " ms to respond." + " " + LocalDateTime.now(TimeZone.getTimeZone("US/Central").toZoneId()).format(DateTimeFormatter.ofPattern("MM/dd/uuuu at h:mm a"))
-                                    + " (US Central Time)")
+                            .setFooter(LocalDateTime.now(TimeZone.getTimeZone("US/Central").toZoneId()).format(DateTimeFormatter.ofPattern("MM/dd/uuuu • h:mm a"))
+                                    + " (US Central Time)" + "\n" + "This took " + duration + " ms to respond.")
                             .setColor(Color.red);
 
                 }
