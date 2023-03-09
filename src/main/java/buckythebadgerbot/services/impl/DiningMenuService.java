@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.TimeZone;
 
 public class DiningMenuService extends APIService {
-    private static final String BASE_URL = "https://wisc-housingdining.nutrislice.com/menu/api/weeks/school/";
+    private static final String BASE_URL = "https://wisc-housingdining.api.nutrislice.com/menu/api/weeks/school/";
 
     private static final Logger logger = LoggerFactory.getLogger(DiningMenuService.class);
 
@@ -53,6 +53,7 @@ public class DiningMenuService extends APIService {
             jsonNode = objectMapper.readTree(response.body());
         } catch (IOException | InterruptedException e) {
             logger.error("Something went wrong with the API request! {}",e.toString());
+            logger.error("Request URL: {}",request.uri());
             return null;
         }
 

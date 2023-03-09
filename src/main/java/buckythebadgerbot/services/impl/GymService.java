@@ -44,6 +44,7 @@ public class GymService extends APIService {
             gymEquipments = objectMapper.readValue(response.body(), new TypeReference<>() {});
         } catch (IOException | InterruptedException e) {
             logger.error("Something went wrong with the API request! {}",e.toString());
+            logger.error("Request URL: {}",request.uri());
             return null;
         }
         ArrayList<HashMap<String, String>> gymInformation = new ArrayList<>();

@@ -59,6 +59,7 @@ public class RMPService extends APIService {
             jsonNode = objectMapper.readTree(response.body());
         } catch (IOException | InterruptedException e) {
             logger.error("Something went wrong with the API request! {}",e.toString());
+            logger.error("Request URL: {}",request.uri());
             prof.setDoesExist(false);
             return prof;
         }
@@ -129,6 +130,7 @@ public class RMPService extends APIService {
             jsonNode = objectMapper.readTree(response.body());
         } catch (IOException | InterruptedException e) {
             logger.error("Something went wrong with the API request! {}",e.toString());
+            logger.error("Request URL: {}",request.uri());
             prof.setDoesExist(false);
             return prof;
         }
@@ -232,6 +234,7 @@ public class RMPService extends APIService {
             jsonNode = objectMapper.readTree(response.body());
         } catch (IOException | InterruptedException e) {
             logger.error("Something went wrong with the API request! {}",e.toString());
+            logger.error("Request URL: {}",request.uri());
             return null;
         }
         ArrayList<StudentRating> studentRatings = new ArrayList<>();
