@@ -28,15 +28,15 @@ public class CourseCommand extends Command {
         this.explanation = """
                 `e.g., <COMP SCI 577>, <Biology>, <102>, <Machine Learning>`
                 Searches for the specified course (or the top result) and displays the following information (in order):\s
-                 - Course Subject, Number and Title
-                 - Course Description
-                 - Cumulative GPA
-                 - Credits
-                 - Requisites
-                 - Course Designation
-                 - Repeatable For Credit
-                 - Last Taught
-                 - Cross-listed Subjects (if any)
+                - Course Subject, Number and Title
+                - Course Description
+                - Cumulative GPA
+                - Credits
+                - Requisites
+                - Course Designation
+                - Repeatable For Credit
+                - Last Taught
+                - Cross-listed Subjects (if any)
                 NOTE: Cross-listed course querying is currently not supported (e.g., "COMP SCI/MATH 240").
                 Additionally, abbreviated subject querying may not work as intended (e.g., "CS 240")""";
         this.args.add(new OptionData(OptionType.STRING, "course", "Course subject and number, and/or title", true));

@@ -54,7 +54,7 @@ public class GymService extends APIService {
 
             //Set up HashMaps for the two facilities
             LinkedHashMap<String, String> nickFacility = new LinkedHashMap<>();
-            LinkedHashMap<String, String> shellFacility = new LinkedHashMap<>();
+            LinkedHashMap<String, String> bakkeFacility = new LinkedHashMap<>();
 
             //Iterate through the list and store the respective information
             for (JsonNode equipment : gymEquipments) {
@@ -74,14 +74,14 @@ public class GymService extends APIService {
                 if (facilityName.equals("Nicholas Recreation Center")) {
                     nickFacility.put(facilityName + "|" + locationName, "Usage: `" + currentCount + "/" + totalCapacity + "`" + "\n"
                             + "Last updated " + "<t:" + lastUpdatedTime + ":R>");
-                } else if (facilityName.equals("Shell")) {
-                    shellFacility.put(facilityName + "|" + locationName, "Usage: `" + currentCount + "/" + totalCapacity + "`" + "\n"
+                } else if (facilityName.equals("Bakke Recreation & Wellbeing Center ")) {
+                    bakkeFacility.put(facilityName + "|" + locationName, "Usage: `" + currentCount + "/" + totalCapacity + "`" + "\n"
                             + "Last updated " + "<t:" + lastUpdatedTime + ":R>");
                 }
             }
 
             gymInformation.add(nickFacility);
-            gymInformation.add(shellFacility);
+            gymInformation.add(bakkeFacility);
         } catch (Exception e) {
             logger.error("Something went wrong with JSON parsing! {}",e.toString());
             return null;
