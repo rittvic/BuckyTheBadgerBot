@@ -30,7 +30,7 @@
         <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
-            <version>5.0.0-beta.2</version>
+            <version>5.0.0-beta.9</version>
         </dependency>
 
         <!-- Environment based config (for JVM) -->
@@ -67,6 +67,14 @@
             <artifactId>HikariCP</artifactId>
             <version>5.0.1</version>
         </dependency>
+
+        <!-- Jericho (HTML parser) -->
+        <dependency>
+            <groupId>net.htmlparser.jericho</groupId>
+            <artifactId>jericho-html</artifactId>
+            <version>3.4</version>
+        </dependency>
+
     </dependencies>
 
     <build>
