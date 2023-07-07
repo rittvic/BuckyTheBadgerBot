@@ -31,7 +31,8 @@ public class CommandManager extends ListenerAdapter {
                 new SearchCommand(bot),
                 new HelpCommand(bot),
                 new GymCommand(bot),
-                new DiningMenuCommand(bot)
+                new DiningMenuCommand(bot),
+                new RSOCommand(bot)
         );
     }
 

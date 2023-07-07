@@ -7,6 +7,7 @@ import buckythebadgerbot.listeners.ButtonListener;
 import buckythebadgerbot.services.impl.DiningMenuService;
 import buckythebadgerbot.services.impl.GymService;
 import buckythebadgerbot.services.impl.RMPService;
+import buckythebadgerbot.services.impl.RSOService;
 import com.zaxxer.hikari.pool.HikariPool;
 import io.github.cdimascio.dotenv.Dotenv;
 import net.dv8tion.jda.api.OnlineStatus;
@@ -36,6 +37,7 @@ public class BuckyTheBadgerBot {
     public RMPService rateMyProfessorClient;
     public DiningMenuService diningMenuClient;
     public GymService gymClient;
+    public RSOService rsoClient;
     public ExecutorService service;
     public final @NotNull ButtonListener buttonListener;
     public final @NotNull StringSelectListener stringSelectListener;
@@ -61,6 +63,7 @@ public class BuckyTheBadgerBot {
         rateMyProfessorClient = new RMPService(config.get("RMP_TOKEN"));
         diningMenuClient = new DiningMenuService();
         gymClient = new GymService(config.get("RECWELL_TOKEN"));
+        rsoClient = new RSOService();
 
         //Setup threadpool
         //NOTE: May choose to setup a certain amount of threads in the future
